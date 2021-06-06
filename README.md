@@ -1,6 +1,6 @@
 # ngosang/docker-amule
 
-[aMmule](https://github.com/amule-project/amule) is a multi-platform client for the ED2K file sharing network and based on the windows client eMule. aMule started in August 2003, as a fork of xMule, which is a fork of lMule.
+[aMule](https://github.com/amule-project/amule) is a multi-platform client for the ED2K file sharing network and based on the windows client eMule. aMule started in August 2003, as a fork of xMule, which is a fork of lMule.
 
 Inspired by [tchabaud](https://github.com/tchabaud/dockerfiles/tree/master/amule) and [synopsis8](https://github.com/synopsis8/dockerfiles/tree/master/amule) work.
 
@@ -38,8 +38,8 @@ services:
     image: ngosang/amule
     container_name: amule
     environment:
-      - PUID=0
-      - PGID=0
+      - PUID=1000
+      - PGID=1000
       - TZ=Europe/London
       # GUI_PWD and WEBUI_PWD are only used in initial setup
       - GUI_PWD=<fill_password>
