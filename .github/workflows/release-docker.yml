@@ -1,9 +1,13 @@
 name: release-docker
 
+# on:
+#   push:
+#     tags:
+#       - '*.*.*'
 on:
   push:
-    tags:
-      - '*.*.*'
+    branches:
+      - "*"
 
 jobs:
   build:
