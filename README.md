@@ -8,9 +8,13 @@ Inspired by [tchabaud](https://github.com/tchabaud/dockerfiles/tree/master/amule
 
 The architectures supported by this image are:
 
-| Architecture | Tag |
-| :----: | --- |
-| x86-64 | amd64-latest |
+* linux/386
+* linux/amd64
+* linux/arm/v7
+* linux/arm64/v8
+* linux/mips64le
+* linux/ppc64le
+* linux/s390x
 
 ## Application Setup
 
