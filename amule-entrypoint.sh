@@ -6,9 +6,9 @@
 AMULE_UID=${PUID:-1000}
 AMULE_GID=${PGID:-1000}
 
-AMULE_HOME=/home/amule/.aMule
 AMULE_INCOMING=/incoming
 AMULE_TEMP=/temp
+AMULE_HOME=/home/amule/.aMule
 AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
 
@@ -18,30 +18,32 @@ if grep -q ":${AMULE_GID}:" /etc/group; then
     AMULE_GROUP=$(getent group "${AMULE_GID}" | cut -d: -f1)
     echo "Group ${AMULE_GROUP} with GID ${AMULE_GID} will be used as amule group."
 else
-    addgroup -g "${AMULE_GID}" amule
+    addgroup amule --gid "${AMULE_GID}"
 fi
 
 if grep -q ":${AMULE_UID}:" /etc/passwd; then
     echo "User ${AMULE_UID} already exists. Won't be added."
 else
-    adduser -S -s /sbin/nologin -u "${AMULE_UID}" -h "/home/amule" -G "${AMULE_GROUP}" amule
+    adduser amule --uid "${AMULE_UID}" --gid "${AMULE_GID}" --shell "/sbin/nologin" --home "/home/amule" --no-create-home --disabled-password --gecos "First Last,RoomNumber,WorkPhone,HomePhone"
 fi
-    
+
 if [ ! -d "${AMULE_INCOMING}" ]; then
     echo "Directory ${AMULE_INCOMING} does not exists. Creating ..."
-    mkdir -p ${AMULE_INCOMING}
-    chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_INCOMING}"
+    mkdir -p "${AMULE_INCOMING}"
 fi
 
 if [ ! -d "${AMULE_TEMP}" ]; then
     echo "Directory ${AMULE_TEMP} does not exists. Creating ..."
-    mkdir -p ${AMULE_TEMP}
-    chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_TEMP}"
+    mkdir -p "${AMULE_TEMP}"
+fi
+
+if [ ! -d ${AMULE_HOME} ]; then
+    echo "${AMULE_HOME} directory NOT found. Creating directory ..."
+    mkdir -p "${AMULE_HOME}"
 fi
 
 if [[ -z "${GUI_PWD}" ]]; then
     AMULE_GUI_PWD=$(pwgen -s 64)
-    echo "No GUI password specified, using generated one: ${AMULE_GUI_PWD}"
 else
     AMULE_GUI_PWD="${GUI_PWD}"
 fi
@@ -49,18 +51,15 @@ AMULE_GUI_ENCODED_PWD=$(echo -n "${AMULE_GUI_PWD}" | md5sum | cut -d ' ' -f 1)
 
 if [[ -z "${WEBUI_PWD}" ]]; then
     AMULE_WEBUI_PWD=$(pwgen -s 64)
-    echo "No web UI password specified, using generated one: ${AMULE_WEBUI_PWD}"
 else
     AMULE_WEBUI_PWD="${WEBUI_PWD}"
 fi
 AMULE_WEBUI_ENCODED_PWD=$(echo -n "${AMULE_WEBUI_PWD}" | md5sum | cut -d ' ' -f 1)
 
-if [ ! -d ${AMULE_HOME} ]; then
-    echo "${AMULE_HOME} directory NOT found. Creating directory ..."
-    sudo -H -u '#'${AMULE_UID} sh -c "mkdir -p ${AMULE_HOME}"
-fi
-
 if [ ! -f ${AMULE_CONF} ]; then
+    echo "Remote GUI password: ${AMULE_GUI_PWD}"
+    echo "Web UI password: ${AMULE_WEBUI_PWD}"
+
     echo "${AMULE_CONF} file NOT found. Generating new default configuration ..."
     cat > ${AMULE_CONF} <<- EOM
 [eMule]
@@ -247,6 +246,9 @@ else
 fi
 
 if [ ! -f ${REMOTE_CONF} ]; then
+    echo "Remote GUI password: ${AMULE_GUI_PWD}"
+    echo "Web UI password: ${AMULE_WEBUI_PWD}"
+
     echo "${REMOTE_CONF} file NOT found. Generating new default configuration ..."
     cat > ${REMOTE_CONF} <<- EOM
 Locale=
@@ -269,5 +271,7 @@ else
     echo "${REMOTE_CONF} file found. Using existing configuration."
 fi
 
-chown -R "${AMULE_UID}:${AMULE_GID}" /home/amule
-sudo -H -u '#'${AMULE_UID} sh -c "amuled -c ${AMULE_HOME} -o"
+chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_INCOMING}
+chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_TEMP}
+chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_HOME}
+sudo -H -u '#'"${AMULE_UID}" sh -c "amuled -c ${AMULE_HOME} -o"
