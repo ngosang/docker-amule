@@ -10,6 +10,12 @@ RUN cd /usr/share/amule/webserver \
     && git clone https://github.com/MatteoRagni/AmuleWebUI-Reloaded \
     && rm -rf AmuleWebUI-Reloaded/.git AmuleWebUI-Reloaded/doc-images
 
+# fix bug https://github.com/amule-project/amule/issues/265
+# grep -rnw '/usr/share/amule/webserver' -e 'amule_stats_kad.png'
+RUN sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/default/amuleweb-main-kad.php \
+    && sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-kad.php \
+    && sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-stats.php
+
 # Add entrypoint
 ADD amule-entrypoint.sh /home/amule/amule-entrypoint.sh
 RUN chmod a+x /home/amule/amule-entrypoint.sh
