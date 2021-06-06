@@ -1,0 +1,23 @@
+version: '2.1'
+services:
+  amule:
+    image: ngosang/amule
+    container_name: amule
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      # GUI_PWD and WEBUI_PWD are only used in initial setup
+      - GUI_PWD=<fill_password>
+      - WEBUI_PWD=<fill_password>
+    ports:
+      - "4711:4711" # web ui
+      - "4712:4712" # remote gui, webserver, cmd ...
+      - "4662:4662" # ed2k tcp
+      - "4665:4665/udp" # ed2k global search udp (tcp port +3)
+      - "4672:4672/udp" # ed2k udp
+    volumes:
+      - <fill_amule_configuration_path>:/home/amule/.aMule
+      - <fill_amule_completed_downloads_path>:/incoming
+      - <fill_amule_incomplete_downloads_path>:/temp
+    restart: unless-stopped
