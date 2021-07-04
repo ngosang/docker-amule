@@ -16,12 +16,11 @@ jobs:
         name: Downcase repo
         run: echo REPOSITORY=ngosang/amule >> $GITHUB_ENV
       -
-        name: Docker meta
-        id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
+        name: Docker metadata
+        id: docker_metadata
+        uses: docker/metadata-action@v3
         with:
           images: ${{ env.REPOSITORY }},ghcr.io/${{ env.REPOSITORY }}
-          tag-sha: false
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1.0.1
@@ -50,5 +49,5 @@ jobs:
           # issues building linux/arm/v5 (perl package)
           platforms: linux/386,linux/amd64,linux/arm/v7,linux/arm64/v8,linux/mips64le,linux/ppc64le,linux/s390x
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          tags: ${{ steps.docker_metadata.outputs.tags }}
+          labels: ${{ steps.docker_metadata.outputs.labels }}

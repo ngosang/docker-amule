@@ -3,13 +3,15 @@ LABEL maintainer="ngosang@hotmail.es"
 
 RUN apt-get update && \
     # Install packages
-    apt-get -y install amule-daemon git pwgen sudo && \
+    apt-get -y install amule-daemon pwgen sudo wget && \
     # Install a nicer Web UI
     cd /usr/share/amule/webserver && \
-    git clone https://github.com/MatteoRagni/AmuleWebUI-Reloaded && \
-    rm -rf AmuleWebUI-Reloaded/.git AmuleWebUI-Reloaded/doc-images && \
+    wget -O AmuleWebUI-Reloaded.zip https://github.com/MatteoRagni/AmuleWebUI-Reloaded/archive/refs/heads/master.zip && \
+    unzip AmuleWebUI-Reloaded.zip && \
+    mv AmuleWebUI-Reloaded-master AmuleWebUI-Reloaded && \
+    rm -rf AmuleWebUI-Reloaded.zip AmuleWebUI-Reloaded/doc-images && \
     # Clean up
-    apt-get -y --purge remove git && \
+    apt-get -y --purge remove wget && \
     apt-get -y autoremove && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/log/*
