@@ -158,10 +158,10 @@ ShowAllNotCats=0
 SmartIdState=0
 DropSlowSources=0
 KadNodesUrl=http://upd.emule-security.org/nodes.dat
-Ed2kServersUrl=http://gruk.org/server.met.gz
+Ed2kServersUrl=http://upd.emule-security.org/server.met
 ShowRatesOnTitle=0
 GeoLiteCountryUpdateUrl=http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-StatsServerName=Shorty's ED2K stats
+StatsServerName=Shorty ED2K stats
 StatsServerURL=http://ed2k.shortypower.dyndns.org/?hash=
 CreateSparseFiles=1
 [Browser]
