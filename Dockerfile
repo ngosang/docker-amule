@@ -38,4 +38,4 @@ EXPOSE 4711/tcp 4712/tcp 4662/tcp 4665/udp 4672/udp
 ENTRYPOINT ["/home/amule/amule-entrypoint.sh"]
 
 # HELP
-# docker build -t ngosang/amule:2.3.3-2 --platform linux/amd64 .
+# docker build -t ngosang/amule:2.3.3-3 --platform linux/amd64 .
