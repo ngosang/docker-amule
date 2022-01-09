@@ -1,9 +1,16 @@
 FROM debian:bullseye-20210621-slim
 LABEL maintainer="ngosang@hotmail.es"
 
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+
 RUN apt-get update && \
     # Install packages
-    apt-get -y install amule-daemon pwgen sudo wget && \
+    apt-get -y install amule-daemon pwgen sudo wget locales && \
+    # Generate locale files
+    sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && \
+    locale-gen && \
     # Install a nicer Web UI
     cd /usr/share/amule/webserver && \
     wget -O AmuleWebUI-Reloaded.zip https://github.com/MatteoRagni/AmuleWebUI-Reloaded/archive/refs/heads/master.zip && \
