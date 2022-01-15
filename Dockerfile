@@ -1,4 +1,4 @@
-FROM debian:bullseye-20210621-slim
+FROM debian:bullseye-20211220-slim
 LABEL maintainer="ngosang@hotmail.es"
 
 ENV LANG en_US.UTF-8
