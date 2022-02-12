@@ -277,10 +277,26 @@ else
     printf "%s file found. Using existing configuration.\n" "${REMOTE_CONF}"
 fi
 
+# Modifications / Fixes
+MOD_AUTO_RESTART_ENABLED=${MOD_AUTO_RESTART_ENABLED:-"false"}
+MOD_AUTO_RESTART_CRON=${MOD_AUTO_RESTART_CRON:-"0 6 * * *"} # every day at 6:00 h
+if [ "${MOD_AUTO_RESTART_ENABLED}" = "true" ]; then
+    # Fix bugs https://github.com/ngosang/docker-amule/issues/7
+    # Auto restart amuled process. The cron scheduler is configurable.
+    printf "[MOD_AUTO_RESTART] aMule will be restarted automatically (cron %s)... You can disable this mod with MOD_AUTO_RESTART_ENABLED=false\n" "$MOD_AUTO_RESTART_CRON"
+    printf "%s /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && kill \$(pidof amuled)'\n" "$MOD_AUTO_RESTART_CRON" >> /etc/crontabs/root
+    crond -l 2 -f > /dev/stdout 2> /dev/stderr &
+fi
+
 # Set permissions
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_INCOMING}
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_TEMP}
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_HOME}
 
 # Start aMule
-sudo -H -u '#'"${AMULE_UID}" sh -c "amuled -c ${AMULE_HOME} -o"
+EXIT_CODE=0
+while [ $EXIT_CODE -eq 0 ]; do
+    sudo -H -u '#'"${AMULE_UID}" sh -c "amuled -c ${AMULE_HOME} -o"
+    EXIT_CODE=$?
+done
+exit $EXIT_CODE
