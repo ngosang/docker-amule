@@ -66,6 +66,8 @@ services:
       - WEBUI_PWD=<fill_password>
       - MOD_AUTO_RESTART_ENABLED=true
       - MOD_AUTO_RESTART_CRON=0 6 * * *
+      - MOD_AUTO_SHARE_ENABLED=false
+      - MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies
     ports:
       - "4711:4711" # web ui
       - "4712:4712" # remote gui, webserver, cmd ...
@@ -91,6 +93,8 @@ docker run -d \
   -e WEBUI_PWD=<fill_password> `#optional` \
   -e MOD_AUTO_RESTART_ENABLED=true `#optional` \
   -e 'MOD_AUTO_RESTART_CRON=0 6 * * *' `#optional` \
+  -e MOD_AUTO_SHARE_ENABLED=false `#optional` \
+  -e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies `#optional` \
   -p 4711:4711 \
   -p 4712:4712 \
   -p 4662:4662 \
@@ -121,6 +125,8 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e WEBUI_PWD=<fill_password>` | Set Web UI password (only used in initial setup). |
 | `-e MOD_AUTO_RESTART_ENABLED=true` | Enable aMule auto restart. Check modifications section. |
 | `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'` | aMule auto restart cron mask. Check modifications section. |
+| `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |
+| `-e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` | aMule auto share directories with subdirectories. Check modifications section. |
 | `-v /home/amule/.aMule` | Path to save aMule configuration. |
 | `-v /incoming` | Path to completed torrents. |
 | `-v /temp` | Path to incomplete torrents. |
@@ -157,3 +163,11 @@ aMule has some issues that cause it to stop working properly after a few days:
 As workaround, we have implemented a cron scheduler to restart aMule from time to time. To enable this mod set these environment variables:
 * `MOD_AUTO_RESTART_ENABLED=true`
 * `MOD_AUTO_RESTART_CRON=0 6 * * *` => Cron mask is configurable. In the example it restarts everyday at 6:00h.
+
+### Auto share mod
+
+By default, aMule only shares "incoming" directory and shared folders cannot be selected in the Web UI
+
+We have added this option in the Docker image. The configuration is updated when the container starts. Note that sub-directories are also shared!
+* `MOD_AUTO_SHARE_ENABLED=true`
+* `MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` => List of directories separated by semicolon ';'. Subdirectories will be shared too.

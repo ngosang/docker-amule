@@ -288,6 +288,23 @@ if [ "${MOD_AUTO_RESTART_ENABLED}" = "true" ]; then
     crond -l 2 -f > /dev/stdout 2> /dev/stderr &
 fi
 
+MOD_AUTO_SHARE_ENABLED=${MOD_AUTO_SHARE_ENABLED:-"false"}
+MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-"/incoming"}
+if [ "${MOD_AUTO_SHARE_ENABLED}" = "true" ]; then
+    # Fix issue https://github.com/ngosang/docker-amule/issues/9
+    # Share all the directories (separated by semicolon ';') and subdirectories in aMule.
+    printf "[MOD_AUTO_SHARE] Sharing the following directories with sub-directories: %s ... You can disable this mod with MOD_AUTO_SHARE_ENABLED=false\n" "$MOD_AUTO_SHARE_DIRECTORIES"
+    SHAREDDIR_CONF=${AMULE_HOME}/shareddir.dat
+    printf "/incoming\n" > "$SHAREDDIR_CONF"
+    IN="$MOD_AUTO_SHARE_DIRECTORIES"
+    while [ "$IN" != "$iter" ] ;do
+        iter=${IN%%;*}
+        IN="${IN#"$iter";}"
+        printf "[MOD_AUTO_SHARE] Sharing directory '%s' with sub-directories...\n" "$iter"
+        find "$iter" -type d >> "$SHAREDDIR_CONF"
+    done
+fi
+
 # Set permissions
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_INCOMING}
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_TEMP}
