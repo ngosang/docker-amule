@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Uncomment for debug
 #set -x
@@ -12,55 +12,61 @@ AMULE_HOME=/home/amule/.aMule
 AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
 
+# Create configuration files if don't exist
 AMULE_GROUP="amule"
 if grep -q ":${AMULE_GID}:" /etc/group; then
-    echo "Group ${AMULE_GID} already exists. Won't be created."
+    printf "Group %s already exists. Won't be created.\n" "${AMULE_GID}"
     AMULE_GROUP=$(getent group "${AMULE_GID}" | cut -d: -f1)
-    echo "Group ${AMULE_GROUP} with GID ${AMULE_GID} will be used as amule group."
+    printf "Group %s with GID %s will be used as amule group.\n" "${AMULE_GROUP}" "${AMULE_GID}"
 else
-    addgroup amule --gid "${AMULE_GID}"
+    printf "Creating group %s with GID %s ...\n" "${AMULE_GROUP}" "${AMULE_GID}"
+    addgroup "${AMULE_GROUP}" -g "${AMULE_GID}"
 fi
 
+AMULE_USER="amule"
 if grep -q ":${AMULE_UID}:" /etc/passwd; then
-    echo "User ${AMULE_UID} already exists. Won't be added."
+    printf "User %s already exists. Won't be added.\n" "${AMULE_UID}"
+    AMULE_USER=$(getent passwd "${AMULE_UID}" | cut -d: -f1)
+    printf "User %s with UID %s will be used as amule user.\n" "${AMULE_USER}" "${AMULE_UID}"
 else
-    adduser amule --uid "${AMULE_UID}" --gid "${AMULE_GID}" --shell "/sbin/nologin" --home "/home/amule" --no-create-home --disabled-password --gecos "First Last,RoomNumber,WorkPhone,HomePhone"
+    printf "Creating user %s with UID %s ...\n" "${AMULE_USER}" "${AMULE_UID}"
+    adduser "${AMULE_USER}" -u "${AMULE_UID}" -G "${AMULE_GROUP}" -s "/sbin/nologin" -h "/home/amule" -H -D -g "First Last,RoomNumber,WorkPhone,HomePhone"
 fi
 
 if [ ! -d "${AMULE_INCOMING}" ]; then
-    echo "Directory ${AMULE_INCOMING} does not exists. Creating ..."
+    printf "Directory %s does not exists. Creating ...\n" "${AMULE_INCOMING}"
     mkdir -p "${AMULE_INCOMING}"
 fi
 
 if [ ! -d "${AMULE_TEMP}" ]; then
-    echo "Directory ${AMULE_TEMP} does not exists. Creating ..."
+    printf "Directory %s does not exists. Creating ...\n" "${AMULE_TEMP}"
     mkdir -p "${AMULE_TEMP}"
 fi
 
 if [ ! -d ${AMULE_HOME} ]; then
-    echo "${AMULE_HOME} directory NOT found. Creating directory ..."
+    printf "%s directory NOT found. Creating directory ...\n" "${AMULE_HOME}"
     mkdir -p "${AMULE_HOME}"
 fi
 
-if [[ -z "${GUI_PWD}" ]]; then
+if [ -z "${GUI_PWD}" ]; then
     AMULE_GUI_PWD=$(pwgen -s 64)
 else
     AMULE_GUI_PWD="${GUI_PWD}"
 fi
-AMULE_GUI_ENCODED_PWD=$(echo -n "${AMULE_GUI_PWD}" | md5sum | cut -d ' ' -f 1)
+AMULE_GUI_ENCODED_PWD=$(printf "%s" "${AMULE_GUI_PWD}" | md5sum | cut -d ' ' -f 1)
 
-if [[ -z "${WEBUI_PWD}" ]]; then
+if [ -z "${WEBUI_PWD}" ]; then
     AMULE_WEBUI_PWD=$(pwgen -s 64)
 else
     AMULE_WEBUI_PWD="${WEBUI_PWD}"
 fi
-AMULE_WEBUI_ENCODED_PWD=$(echo -n "${AMULE_WEBUI_PWD}" | md5sum | cut -d ' ' -f 1)
+AMULE_WEBUI_ENCODED_PWD=$(printf "%s" "${AMULE_WEBUI_PWD}" | md5sum | cut -d ' ' -f 1)
 
 if [ ! -f ${AMULE_CONF} ]; then
-    echo "Remote GUI password: ${AMULE_GUI_PWD}"
-    echo "Web UI password: ${AMULE_WEBUI_PWD}"
+    printf "Remote GUI password: %s\n" "${AMULE_GUI_PWD}"
+    printf "Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
 
-    echo "${AMULE_CONF} file NOT found. Generating new default configuration ..."
+    printf "%s file NOT found. Generating new default configuration ...\n" "${AMULE_CONF}"
     cat > ${AMULE_CONF} <<- EOM
 [eMule]
 AppVersion=2.3.3
@@ -240,16 +246,16 @@ GUICommand=
 [HTTPDownload]
 URL_1=http://upd.emule-security.org/ipfilter.zip 
 EOM
-    echo "${AMULE_CONF} successfullly generated."
+    printf "%s successfullly generated.\n" "${AMULE_CONF}"
 else
-    echo "${AMULE_CONF} file found. Using existing configuration."
+    printf "%s file found. Using existing configuration.\n" "${AMULE_CONF}"
 fi
 
 if [ ! -f ${REMOTE_CONF} ]; then
-    echo "Remote GUI password: ${AMULE_GUI_PWD}"
-    echo "Web UI password: ${AMULE_WEBUI_PWD}"
+    printf "Remote GUI password: %s\n" "${AMULE_GUI_PWD}"
+    printf "Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
 
-    echo "${REMOTE_CONF} file NOT found. Generating new default configuration ..."
+    printf "%s file NOT found. Generating new default configuration ...\n" "${REMOTE_CONF}"
     cat > ${REMOTE_CONF} <<- EOM
 Locale=
 [EC]
@@ -266,12 +272,15 @@ AllowGuest=0
 AdminPassword=${AMULE_WEBUI_ENCODED_PWD}
 GuestPassword=
 EOM
-    echo "${REMOTE_CONF} successfullly generated."
+    printf "%s successfullly generated.\n" "${REMOTE_CONF}"
 else
-    echo "${REMOTE_CONF} file found. Using existing configuration."
+    printf "%s file found. Using existing configuration.\n" "${REMOTE_CONF}"
 fi
 
+# Set permissions
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_INCOMING}
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_TEMP}
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_HOME}
+
+# Start aMule
 sudo -H -u '#'"${AMULE_UID}" sh -c "amuled -c ${AMULE_HOME} -o"

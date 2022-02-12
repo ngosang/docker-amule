@@ -1,41 +1,94 @@
-FROM debian:bullseye-20211220-slim
+FROM alpine:3.15 as builder
+
+# This is optimized for GitHub Actions.
+# For performance CXXFLAGS="-O2 -pipe" & MAKE_JOBS=$(( $(nproc) + 1 ))
+ENV CXXFLAGS "-O2"
+ENV MAKE_JOBS 2
+WORKDIR /tmp
+
+# Install crypto++ (cryptopp) Compilation is really slow in ARM/v6/v7
+RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing crypto++-dev
+
+# Build crypto++ (cryptopp)
+# ENV CRYPTOPP_VERSION 8.6.0
+# RUN apk add --no-cache gcc g++ make wget
+# RUN wget -O cryptopp.zip https://www.cryptopp.com/cryptopp${CRYPTOPP_VERSION//./}.zip && \
+#     unzip cryptopp.zip -d cryptopp && \
+# 	cd cryptopp && \
+# 	make CXXFLAGS="$CXXFLAGS -DNDEBUG -fPIC" -f GNUmakefile -j $MAKE_JOBS dynamic libcryptopp.pc && \
+# 	make PREFIX="/usr" install-lib && \
+# 	ln /usr/lib/libcryptopp.so.8.6.0 /usr/lib/libcryptopp.so.8
+
+# Build aMule
+ENV AMULE_VERSION 2.3.3
+RUN apk add --no-cache gcc g++ make wget boost-dev geoip-dev libupnp-dev wxgtk3-dev
+RUN wget -O amule.tar.xz https://downloads.sourceforge.net/project/amule/aMule/$AMULE_VERSION/aMule-$AMULE_VERSION.tar.xz && \
+    tar -xf amule.tar.xz && \
+	cd aMule-* && \
+	./configure \
+		CPPFLAGS="$CPPFLAGS -Wno-unused-local-typedefs" \
+		CFLAGS="$CFLAGS -fPIC" \
+		CXXFLAGS="$CXXFLAGS -fPIC" \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		--enable-alcc \
+		--enable-amule-daemon \
+		--enable-amulecmd \
+		--enable-geoip \
+		--enable-optimize \
+		--enable-upnp \
+		--enable-webserver \
+		--disable-debug \
+        --disable-nls \
+        --disable-monolithic \
+		--with-boost \
+		--with-wx-config=wx-config-gtk3 && \
+	make -j $MAKE_JOBS && \
+	make install
+
+# Reduce binaries size
+RUN strip /usr/lib/libcryptopp.so.8 && \
+	strip /usr/bin/alcc && \
+	strip /usr/bin/amulecmd && \
+	strip /usr/bin/amuled && \
+	strip /usr/bin/amuleweb && \
+	strip /usr/bin/ed2k
+
+# Install a modern Web UI
+RUN cd /usr/share/amule/webserver && \
+	wget -O AmuleWebUI-Reloaded.zip https://github.com/MatteoRagni/AmuleWebUI-Reloaded/archive/refs/heads/master.zip && \
+	unzip AmuleWebUI-Reloaded.zip && \
+	mv AmuleWebUI-Reloaded-master AmuleWebUI-Reloaded && \
+	rm -rf AmuleWebUI-Reloaded.zip AmuleWebUI-Reloaded/doc-images
+
+FROM alpine:3.15
+
 LABEL maintainer="ngosang@hotmail.es"
 
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
+# Install packages
+RUN apk --no-cache add geoip libgcc libpng libstdc++ libupnp musl zlib wxgtk-base tzdata pwgen sudo
 
-RUN apt-get update && \
-    # Install packages
-    apt-get -y install amule-daemon pwgen sudo wget locales && \
-    # Generate locale files
-    sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && \
-    locale-gen && \
-    # Install a nicer Web UI
-    cd /usr/share/amule/webserver && \
-    wget -O AmuleWebUI-Reloaded.zip https://github.com/MatteoRagni/AmuleWebUI-Reloaded/archive/refs/heads/master.zip && \
-    unzip AmuleWebUI-Reloaded.zip && \
-    mv AmuleWebUI-Reloaded-master AmuleWebUI-Reloaded && \
-    rm -rf AmuleWebUI-Reloaded.zip AmuleWebUI-Reloaded/doc-images && \
-    # Clean up
-    apt-get -y --purge remove wget && \
-    apt-get -y autoremove && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /var/log/*
-
-# Fix bug https://github.com/amule-project/amule/issues/265
-# grep -rnw '/usr/share/amule/webserver' -e 'amule_stats_kad.png'
-RUN sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/default/amuleweb-main-kad.php \
-    && sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-kad.php \
-    && sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-stats.php
+# Copy binaries
+COPY --from=builder /usr/lib/libcryptopp.so.8 /usr/lib/
+COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
+COPY --from=builder /usr/share/amule /usr/share/amule
 
 # Add entrypoint
-ADD amule-entrypoint.sh /home/amule/amule-entrypoint.sh
-RUN chmod a+x /home/amule/amule-entrypoint.sh
+COPY entrypoint.sh /home/amule/entrypoint.sh
+
+WORKDIR /home/amule
 
 EXPOSE 4711/tcp 4712/tcp 4662/tcp 4665/udp 4672/udp
 
-ENTRYPOINT ["/home/amule/amule-entrypoint.sh"]
+ENTRYPOINT ["/home/amule/entrypoint.sh"]
 
 # HELP
-# docker build -t ngosang/amule:2.3.3-4 --platform linux/amd64 .
+#
+# => Build Docker image
+# docker build -t ngosang/amule:test .
+#
+# => Reference Alpine packages
+# https://git.alpinelinux.org/aports/tree/testing/crypto++
+# https://git.alpinelinux.org/aports/tree/testing/amule
