@@ -305,6 +305,17 @@ if [ "${MOD_AUTO_SHARE_ENABLED}" = "true" ]; then
     done
 fi
 
+MOD_FIX_KAD_GRAPH_ENABLED=${MOD_FIX_KAD_GRAPH_ENABLED:-"false"}
+if [ "${MOD_FIX_KAD_GRAPH_ENABLED}" = "true" ]; then
+    # Fix bug https://github.com/amule-project/amule/issues/265
+    # Removes the images causing the issue. They won't be visible in the Web UI.
+    # grep -rnw '/usr/share/amule/webserver' -e 'amule_stats_kad.png'
+    printf "[MOD_FIX_KAD_GRAPH] Removing Kad stats graph to fix potential crash... You can disable this mod with MOD_FIX_KAD_GRAPH_ENABLED=false\n"
+    sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/default/amuleweb-main-kad.php
+    sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-kad.php
+    sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-stats.php
+fi
+
 # Set permissions
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_INCOMING}
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_TEMP}

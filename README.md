@@ -68,6 +68,7 @@ services:
       - MOD_AUTO_RESTART_CRON=0 6 * * *
       - MOD_AUTO_SHARE_ENABLED=false
       - MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies
+      - MOD_FIX_KAD_GRAPH_ENABLED=true
     ports:
       - "4711:4711" # web ui
       - "4712:4712" # remote gui, webserver, cmd ...
@@ -95,6 +96,7 @@ docker run -d \
   -e 'MOD_AUTO_RESTART_CRON=0 6 * * *' `#optional` \
   -e MOD_AUTO_SHARE_ENABLED=false `#optional` \
   -e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies `#optional` \
+  -e MOD_FIX_KAD_GRAPH_ENABLED=true `#optional` \
   -p 4711:4711 \
   -p 4712:4712 \
   -p 4662:4662 \
@@ -127,6 +129,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'` | aMule auto restart cron mask. Check modifications section. |
 | `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |
 | `-e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` | aMule auto share directories with subdirectories. Check modifications section. |
+| `-e MOD_FIX_KAD_GRAPH_ENABLED=true` | Fix Kad stats graph bug. Check modifications section. |
 | `-v /home/amule/.aMule` | Path to save aMule configuration. |
 | `-v /incoming` | Path to completed torrents. |
 | `-v /temp` | Path to incomplete torrents. |
@@ -171,3 +174,10 @@ By default, aMule only shares "incoming" directory and shared folders cannot be 
 We have added this option in the Docker image. The configuration is updated when the container starts. Note that sub-directories are also shared!
 * `MOD_AUTO_SHARE_ENABLED=true`
 * `MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` => List of directories separated by semicolon ';'. Subdirectories will be shared too.
+
+### Fix Kad stats graph mod
+
+aMule has an issue when it renders Kad stats graph that [crash the application](https://github.com/amule-project/amule/issues/265). The crash happens when you enter in the Web UI stats after few days running.
+
+As workaround, we removed the image causing the issue from the Web UI. Since the image is not requested the server doesn't crash.
+* `MOD_FIX_KAD_GRAPH_ENABLED=true`
