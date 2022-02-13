@@ -3,7 +3,7 @@ FROM alpine:edge as builder
 WORKDIR /tmp
 
 # Install aMule
-RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing amule
+RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing amule amule-doc
 
 # Install a modern Web UI
 RUN cd /usr/share/amule/webserver && \
@@ -17,12 +17,13 @@ FROM alpine:edge
 LABEL maintainer="ngosang@hotmail.es"
 
 # Install packages
-RUN apk --no-cache add libgcc libpng libstdc++ libupnp libintl musl zlib wxgtk-base tzdata pwgen sudo && \
+RUN apk add --no-cache libgcc libpng libstdc++ libupnp libintl musl zlib wxgtk-base tzdata pwgen sudo mandoc && \
     apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing crypto++
 
-# Copy binaries
+# Copy binaries and Man doc
 COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
 COPY --from=builder /usr/share/amule /usr/share/amule
+COPY --from=builder /usr/share/man/man1/alcc.1.gz /usr/share/man/man1/amulecmd.1.gz /usr/share/man/man1/amuled.1.gz /usr/share/man/man1/amuleweb.1.gz /usr/share/man/man1/ed2k.1.gz /usr/share/man/man1/
 
 # Check binaries are OK
 RUN ldd /usr/bin/alcc && \

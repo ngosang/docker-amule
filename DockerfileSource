@@ -68,7 +68,7 @@ FROM alpine:3.15
 LABEL maintainer="ngosang@hotmail.es"
 
 # Install packages
-RUN apk --no-cache add geoip libgcc libpng libstdc++ libupnp musl zlib wxgtk-base tzdata pwgen sudo
+RUN apk add --no-cache libgcc libpng libstdc++ libupnp musl zlib wxgtk-base tzdata pwgen sudo
 
 # Copy binaries
 COPY --from=builder /usr/lib/libcryptopp.so.8 /usr/lib/
