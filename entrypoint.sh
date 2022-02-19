@@ -284,8 +284,11 @@ if [ "${MOD_AUTO_RESTART_ENABLED}" = "true" ]; then
     # Fix bugs https://github.com/ngosang/docker-amule/issues/7
     # Auto restart amuled process. The cron scheduler is configurable.
     printf "[MOD_AUTO_RESTART] aMule will be restarted automatically (cron %s)... You can disable this mod with MOD_AUTO_RESTART_ENABLED=false\n" "$MOD_AUTO_RESTART_CRON"
-    printf "%s /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && kill \$(pidof amuled)'\n" "$MOD_AUTO_RESTART_CRON" >> /etc/crontabs/root
-    crond -l 2 -f > /dev/stdout 2> /dev/stderr &
+    # Avoid adding several times the same cron task when the container restarts
+    if ! grep -q "MOD_AUTO_RESTART" "/etc/crontabs/root" ; then
+        printf "%s /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && kill \$(pidof amuled)'\n" "$MOD_AUTO_RESTART_CRON" >> /etc/crontabs/root
+    fi
+    crond -l 8 -f > /dev/stdout 2> /dev/stderr &
 fi
 
 MOD_AUTO_SHARE_ENABLED=${MOD_AUTO_SHARE_ENABLED:-"false"}
@@ -326,5 +329,6 @@ EXIT_CODE=0
 while [ $EXIT_CODE -eq 0 ]; do
     sudo -H -u '#'"${AMULE_UID}" sh -c "amuled -c ${AMULE_HOME} -o"
     EXIT_CODE=$?
+    printf "aMule exited with exit code: %d\n" "$EXIT_CODE"
 done
 exit $EXIT_CODE
