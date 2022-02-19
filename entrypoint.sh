@@ -327,7 +327,7 @@ chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_HOME}
 # Start aMule
 EXIT_CODE=0
 while [ $EXIT_CODE -eq 0 ]; do
-    sudo -H -u '#'"${AMULE_UID}" sh -c "amuled -c ${AMULE_HOME} -o"
+    su "${AMULE_USER}" -s "/bin/sh" -c "amuled -c ${AMULE_HOME} -o"
     EXIT_CODE=$?
     printf "aMule exited with exit code: %d\n" "$EXIT_CODE"
 done
