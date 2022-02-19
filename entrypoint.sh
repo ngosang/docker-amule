@@ -217,7 +217,7 @@ MaxClientVersions=0
 [Obfuscation]
 IsClientCryptLayerSupported=1
 IsCryptLayerRequested=1
-IsClientCryptLayerRequired=0
+IsClientCryptLayerRequired=1
 CryptoPaddingLenght=254
 CryptoKadUDPKey=138123518
 [PowerManagement]
