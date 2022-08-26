@@ -1,6 +1,6 @@
 # docker for amule broadband
 
-build and run amule broadband branch (https://github.com/mercu01/amule)
+Build and run amule broadband branch (https://github.com/mercu01/amule)
 
 ## docker hub -> mercu/builder-amule
 
