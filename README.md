@@ -1,3 +1,12 @@
+#docker for amule broadband
+
+build and run amule broadband branch (https://github.com/mercu01/amule)
+
+##docker hub -> mercu/builder-amule
+
+https://hub.docker.com/repository/docker/mercu/builder-amule
+
+## Original idea -> https://hub.docker.com/r/ngosang/amule
 # ngosang/amule
 
 [![Latest release](https://img.shields.io/github/v/release/ngosang/docker-amule)](https://github.com/ngosang/docker-amule/releases)
