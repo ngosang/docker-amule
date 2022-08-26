@@ -4,7 +4,7 @@ Build and run amule broadband branch (https://github.com/mercu01/amule)
 
 ## docker hub -> mercu/builder-amule
 
-https://hub.docker.com/repository/docker/mercu/builder-amule
+https://hub.docker.com/r/mercu/builder-amule
 
 ## Original idea -> https://hub.docker.com/r/ngosang/amule
 # ngosang/amule
