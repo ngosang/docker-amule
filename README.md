@@ -61,7 +61,6 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-      # GUI_PWD and WEBUI_PWD are only used in initial setup
       - GUI_PWD=<fill_password>
       - WEBUI_PWD=<fill_password>
       - MOD_AUTO_RESTART_ENABLED=true
@@ -87,6 +86,11 @@ services:
 ```bash
 docker run -d \
   --name=amule \
+  -p 4711:4711 \
+  -p 4712:4712 \
+  -p 4662:4662 \
+  -p 4665:4665/udp \
+  -p 4672:4672/udp \
   -e PUID=1000 \
   -e PGID=1000 \
   -e TZ=Europe/London \
@@ -97,11 +101,6 @@ docker run -d \
   -e MOD_AUTO_SHARE_ENABLED=false `#optional` \
   -e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies `#optional` \
   -e MOD_FIX_KAD_GRAPH_ENABLED=true `#optional` \
-  -p 4711:4711 \
-  -p 4712:4712 \
-  -p 4662:4662 \
-  -p 4665:4665/udp \
-  -p 4672:4672/udp \
   -v <fill_amule_configuration_path>:/home/amule/.aMule \
   -v <fill_amule_completed_downloads_path>:/incoming \
   -v <fill_amule_incomplete_downloads_path>:/temp \
@@ -123,8 +122,8 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e PUID=1000` | for UserID - see below for explanation. |
 | `-e PGID=1000` | for GroupID - see below for explanation. |
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
-| `-e GUI_PWD=<fill_password>` | Set Remote GUI password (only used in initial setup). |
-| `-e WEBUI_PWD=<fill_password>` | Set Web UI password (only used in initial setup). |
+| `-e GUI_PWD=<fill_password>` | Set Remote GUI password. It will overwrite the password in the config files. |
+| `-e WEBUI_PWD=<fill_password>` | Set Web UI password. It will overwrite the password in the config files. |
 | `-e MOD_AUTO_RESTART_ENABLED=true` | Enable aMule auto restart. Check modifications section. |
 | `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'` | aMule auto restart cron mask. Check modifications section. |
 | `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |

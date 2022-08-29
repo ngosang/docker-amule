@@ -7,7 +7,6 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-      # GUI_PWD and WEBUI_PWD are only used in initial setup
       - GUI_PWD=<fill_password>
       - WEBUI_PWD=<fill_password>
       - MOD_AUTO_RESTART_ENABLED=true

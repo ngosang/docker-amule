@@ -49,14 +49,14 @@ if [ ! -d ${AMULE_HOME} ]; then
 fi
 
 if [ -z "${GUI_PWD}" ]; then
-    AMULE_GUI_PWD=$(pwgen -s 64)
+    AMULE_GUI_PWD=$(pwgen -s 14)
 else
     AMULE_GUI_PWD="${GUI_PWD}"
 fi
 AMULE_GUI_ENCODED_PWD=$(printf "%s" "${AMULE_GUI_PWD}" | md5sum | cut -d ' ' -f 1)
 
 if [ -z "${WEBUI_PWD}" ]; then
-    AMULE_WEBUI_PWD=$(pwgen -s 64)
+    AMULE_WEBUI_PWD=$(pwgen -s 14)
 else
     AMULE_WEBUI_PWD="${WEBUI_PWD}"
 fi
@@ -275,6 +275,16 @@ EOM
     printf "%s successfullly generated.\n" "${REMOTE_CONF}"
 else
     printf "%s file found. Using existing configuration.\n" "${REMOTE_CONF}"
+fi
+
+# Replace passwords
+if [ -n "${GUI_PWD}" ]; then
+    sed -i "s/^ECPassword=.*/ECPassword=${AMULE_GUI_ENCODED_PWD}/" "${AMULE_CONF}"
+    sed -i "s/^Password=.*/Password=${AMULE_GUI_ENCODED_PWD}/" "${REMOTE_CONF}"
+fi
+if [ -n "${WEBUI_PWD}" ]; then
+    sed -i "s/^Password=.*/Password=${AMULE_WEBUI_ENCODED_PWD}/" "${AMULE_CONF}"
+    sed -i "s/^AdminPassword=.*/AdminPassword=${AMULE_WEBUI_ENCODED_PWD}/" "${REMOTE_CONF}"
 fi
 
 # Modifications / Fixes
