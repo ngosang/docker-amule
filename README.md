@@ -24,7 +24,6 @@ docker pull ngosang/amule
 
 The architectures supported by this image are:
 
-* linux/386
 * linux/amd64
 * linux/arm/v6
 * linux/arm/v7
