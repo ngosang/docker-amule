@@ -48,7 +48,7 @@ RUN mkdir -p /build \
 # Build amule from source
 ADD "https://api.github.com/repos/mercu01/amule/commits?per_page=1" latest_commit
 RUN mkdir -p /build \
-    && git clone --branch master --single-branch "https://github.com/mercu01/amule" \
+    && git clone --branch 2.3.3_beta --single-branch "https://github.com/mercu01/amule" \
     && cd amule* \
     && ./autogen.sh >/dev/null \
     && ./configure \
