@@ -16,7 +16,7 @@ WORKDIR /tmp
 # Upgrade required packages (build)
 RUN apk --update add gd geoip libpng libwebp pwgen sudo wxgtk zlib bash && \
     apk --update add --virtual build-dependencies alpine-sdk automake \
-                               autoconf bison g++ gcc gd-dev geoip-dev \
+                               autoconf=2.69-r0 bison g++ gcc gd-dev geoip-dev \
                                gettext gettext-dev git libpng-dev libwebp-dev \
                                libtool libsm-dev make musl-dev wget \
                                wxgtk-dev zlib-dev 
