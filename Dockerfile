@@ -2,6 +2,15 @@ FROM alpine:edge as builder
 
 WORKDIR /tmp
 
+# Older version of automake required for R package httpuv
+RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.11/main' >> /etc/apk/repositories
+
+# Download R and system dependencies
+RUN set -ex; \
+    apk add --no-cache \
+	autoconf=2.69-r2 \
+	automake=1.16.1-r0 
+
 # Install aMule
 #RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing amule amule-doc
 ENV AMULE_VERSION 2.3.2
@@ -11,12 +20,11 @@ ENV BOOST_VERSION=1.76.0
 ENV BOOST_VERSION_=1_76_0
 ENV BOOST_ROOT=/usr/include/boost
 
-WORKDIR /tmp
 
 # Upgrade required packages (build)
 RUN apk --update add gd geoip libpng libwebp pwgen sudo wxgtk zlib bash && \
-    apk --update add --virtual build-dependencies alpine-sdk automake \
-                               autoconf=2.69-r0 bison g++ gcc gd-dev geoip-dev \
+    apk --update add --virtual build-dependencies alpine-sdk \
+                               bison g++ gcc gd-dev geoip-dev \
                                gettext gettext-dev git libpng-dev libwebp-dev \
                                libtool libsm-dev make musl-dev wget \
                                wxgtk-dev zlib-dev 
