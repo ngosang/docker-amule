@@ -1,4 +1,6 @@
 FROM alpine:edge as builder
+ARG TARGETPLATFORM
+RUN echo "I'm building for $TARGETPLATFORM"
 
 WORKDIR /tmp
 
@@ -14,10 +16,10 @@ RUN set -ex; \
 # Install aMule
 #RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing amule amule-doc
 ENV AMULE_VERSION 2.3.2
-ENV UPNP_VERSION 1.6.22
+ENV UPNP_VERSION 1.14.13
 ENV CRYPTOPP_VERSION CRYPTOPP_5_6_5
-ENV BOOST_VERSION=1.76.0
-ENV BOOST_VERSION_=1_76_0
+ENV BOOST_VERSION=1.80.0
+ENV BOOST_VERSION_=1_80_0
 ENV BOOST_ROOT=/usr/include/boost
 
 
@@ -27,7 +29,7 @@ RUN apk --update add gd geoip libpng libwebp pwgen sudo wxgtk zlib bash && \
                                bison g++ gcc gd-dev geoip-dev \
                                gettext gettext-dev git libpng-dev libwebp-dev \
                                libtool libsm-dev make musl-dev wget \
-                               wxgtk-dev zlib-dev 
+                               wxgtk3-dev zlib-dev 
 							   
 
 # Get boost headers
@@ -56,33 +58,26 @@ RUN mkdir -p /build \
 # Build amule from source
 ADD "https://api.github.com/repos/mercu01/amule/commits?per_page=1" latest_commit
 RUN mkdir -p /build \
-    && git clone --branch 2.3.3_beta --single-branch "https://github.com/mercu01/amule" \
+    && git clone --branch 2.3.3_beta3 --single-branch "https://github.com/mercu01/amule" \
     && cd amule* \
     && ./autogen.sh >/dev/null \
     && ./configure \
-        --disable-gui \
-        --disable-amule-gui \
-        --disable-wxcas \
-        --disable-alc \
-        --disable-plasmamule \
-        --disable-kde-in-home \
+		--build=${TARGETPLATFORM} \
         --prefix=/usr \
         --mandir=/usr/share/man \
-        --enable-unicode \
-        --without-subdirs \
-        --without-expat \
-        --enable-amule-daemon \
-        --enable-amulecmd \
-        --enable-webserver \
-        --enable-cas \
-        --enable-alcc \
-        --enable-fileview \
-        --enable-geoip \
-        --enable-mmap \
-        --enable-optimize \
-        --enable-upnp \
-        --disable-debug \
+        --enable-alc \
+ 		--enable-alcc \
+ 		--enable-amule-daemon \
+ 		--enable-amule-gui \
+ 		--enable-amulecmd \
+ 		--enable-ccache \
+ 		--enable-geoip \
+ 		--enable-optimize \
+ 		--enable-upnp \
+ 		--enable-webserver \
+ 		--disable-debug \
         --with-boost=${BOOST_ROOT} \
+		--with-wx-config=wx-config-gtk3 \
         >/dev/null  \
     && make -j$(nproc) >/dev/null \
     && make DESTDIR=/build install 
@@ -103,7 +98,12 @@ RUN apk add --no-cache libgcc libpng libstdc++ libupnp libintl musl zlib wxgtk-b
     apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing crypto++
 
 # Copy build directory
-COPY --from=builder /build /
+COPY --from=builder /build/usr/bin/alcc /usr/bin/alcc
+COPY --from=builder /build/usr/bin/amulecmd /usr/bin/amulecmd
+COPY --from=builder /build/usr/bin/amuled /usr/bin/amuled
+COPY --from=builder /build/usr/bin/amuleweb /usr/bin/amuleweb
+COPY --from=builder /build/usr/bin/ed2k /usr/bin/ed2k
+COPY --from=builder /build/usr/share/amule /usr/share/amule
 
 # Check binaries are OK
 RUN ldd /usr/bin/alcc && \
@@ -124,7 +124,6 @@ ENTRYPOINT ["sh", "/home/amule/entrypoint.sh"]
 # HELP
 #
 # => Build Docker image
-# docker build -t mercu/ngosang/builder-amule:latest .
-#
-# => Reference Alpine packages
-# https://git.alpinelinux.org/aports/tree/testing/amule
+#docker build --platform linux/arm64/v8 -t mercu/builder-amule:arm64 .
+# => Push Dockerhub image
+#docker push mercu/builder-amule:arm64

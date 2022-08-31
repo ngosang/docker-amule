@@ -20,8 +20,11 @@ https://hub.docker.com/r/mercu/builder-amule
 
 [aMule](https://github.com/amule-project/amule) is a multi-platform client for the ED2K file sharing network and based on the windows client eMule. aMule started in August 2003, as a fork of xMule, which is a fork of lMule.
 
-Inspired by [tchabaud](https://github.com/tchabaud/dockerfiles/tree/master/amule) and [synopsis8](https://github.com/synopsis8/dockerfiles/tree/master/amule) work.
-
+Inspired by 
+ - Dockerfile: [tchabaud](https://github.com/tchabaud/dockerfiles/tree/master/amule)
+ - Dockerfile++:[synopsis8](https://github.com/synopsis8/dockerfiles/tree/master/amule) work.
+ - Amule build: [August Klein <amatcoder@gmail.com>]  https://git.alpinelinux.org/aports/tree/testing/amule/APKBUILD?id=4df4f19085fdd31768a1a725382949034ae03792
+ 
 ## Docker Registry
 
 Docker images are available in [GHCR](https://github.com/users/ngosang/packages/container/package/amule) and [DockerHub](https://hub.docker.com/r/ngosang/amule).
