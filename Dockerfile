@@ -62,7 +62,7 @@ RUN mkdir -p /build \
     && cd amule* \
     && ./autogen.sh >/dev/null \
     && ./configure \
-		--build=${TARGETPLATFORM} \
+		--build=$(uname -m) \
         --prefix=/usr \
         --mandir=/usr/share/man \
         --enable-alc \
