@@ -124,6 +124,6 @@ ENTRYPOINT ["sh", "/home/amule/entrypoint.sh"]
 # HELP
 #
 # => Build Docker image
-#docker build --platform linux/arm64/v8 -t mercu/builder-amule:arm64 .
+#docker buildx build --platform linux/arm64/v8 -t mercu/builder-amule:arm64 .
 # => Push Dockerhub image
 #docker push mercu/builder-amule:arm64
