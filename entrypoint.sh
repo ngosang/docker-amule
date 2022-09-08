@@ -70,7 +70,7 @@ if [ ! -f ${AMULE_CONF} ]; then
     cat > ${AMULE_CONF} <<- EOM
 [eMule]
 AppVersion=2.3.3
-Nick=http://www.aMule.org
+Nick=aMule broadband - https://github.com/mercu01/amule
 QueueSizePref=50
 MaxUpload=0
 MaxDownload=0
@@ -130,8 +130,8 @@ GeoIPEnabled=1
 VideoPlayer=
 StatGraphsInterval=3
 statsInterval=30
-DownloadCapacity=300
-UploadCapacity=100
+DownloadCapacity=0
+UploadCapacity=0
 StatsAverageMinutes=5
 VariousStatisticsMaxValue=100
 SeeShare=2
