@@ -89,7 +89,7 @@ RUN cd /build/usr/share/amule/webserver && \
     mv AmuleWebUI-Reloaded-master AmuleWebUI-Reloaded && \
     rm -rf AmuleWebUI-Reloaded.zip AmuleWebUI-Reloaded/doc-images
 
-FROM alpine:edge
+FROM alpine:3.16
 
 LABEL maintainer="mercu01@gmail.com original author -> ngosang@hotmail.es"
 
