@@ -56,7 +56,7 @@ RUN mkdir -p /build \
     && make DESTDIR=/build PREFIX="/usr" install
 
 # Build amule from source
-ADD "https://api.github.com/repos/mercu01/amule/commits?per_page=1" latest_commit
+ADD "https://api.github.com/repos/mercu01/amule/commits?per_page=1&sha=2.3.3_Broadband" latest_commit
 RUN mkdir -p /build \
     && git clone --branch 2.3.3_Broadband --single-branch "https://github.com/mercu01/amule" \
     && cd amule* \
