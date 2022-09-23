@@ -18,7 +18,7 @@ FROM alpine:edge
 LABEL maintainer="ngosang@hotmail.es"
 
 # Install packages
-RUN apk add --no-cache libgcc libpng libstdc++ libupnp libintl musl zlib wxgtk-base tzdata pwgen mandoc && \
+RUN apk add --no-cache libedit libgcc libintl libpng libstdc++ libupnp musl wxwidgets zlib tzdata pwgen mandoc && \
     apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing crypto++
 
 # Copy binaries and Man doc
