@@ -6,11 +6,12 @@ WORKDIR /tmp
 RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing amule amule-doc
 
 # Install a modern Web UI
-RUN cd /usr/share/amule/webserver && \
-    wget -O AmuleWebUI-Reloaded.zip https://github.com/MatteoRagni/AmuleWebUI-Reloaded/archive/refs/heads/master.zip && \
+RUN AMULEWEBUI_RELOADED_COMMIT=1a85ead05e26202de8d98af4248189a869a24795 && \
+    cd /usr/share/amule/webserver && \
+    wget -O AmuleWebUI-Reloaded.zip https://github.com/MatteoRagni/AmuleWebUI-Reloaded/archive/${AMULEWEBUI_RELOADED_COMMIT}.zip && \
     unzip AmuleWebUI-Reloaded.zip && \
-    mv AmuleWebUI-Reloaded-master AmuleWebUI-Reloaded && \
-    rm -rf AmuleWebUI-Reloaded.zip AmuleWebUI-Reloaded/doc-images
+    mv AmuleWebUI-Reloaded-* AmuleWebUI-Reloaded && \
+    rm -rf AmuleWebUI-Reloaded.zip AmuleWebUI-Reloaded/doc-images AmuleWebUI-Reloaded/README.md
 
 FROM alpine:edge
 
