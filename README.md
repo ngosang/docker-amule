@@ -30,7 +30,6 @@ The architectures supported by this image are:
 * linux/arm64/v8
 * linux/ppc64le
 * linux/s390x
-* linux/riscv64
 
 ## Application Setup
 

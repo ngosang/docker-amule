@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.3-11 (2022/09/23)
+
+* Fix Dockerfile with new Alpine Edge packages
+* Remove riscv64 architecture
+* Update AmuleWebUI-Reloaded theme
+* Commit Changelog.md
+
 ## 2.3.3-10 (2022/08/29)
 
 * Overwrite the passwords if environment variables are set
