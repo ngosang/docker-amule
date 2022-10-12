@@ -84,7 +84,7 @@ RUN mkdir -p /build \
 
 # Install a modern Web UI
 RUN cd /build/usr/share/amule/webserver && \
-    wget -O AmuleWebUI-Reloaded.zip https://github.com/MatteoRagni/AmuleWebUI-Reloaded/archive/refs/heads/master.zip && \
+    wget -O AmuleWebUI-Reloaded.zip https://github.com/mercu01/AmuleWebUI-Reloaded/archive/refs/heads/mercu01/amule-Broadband.zip && \
     unzip AmuleWebUI-Reloaded.zip && \
     mv AmuleWebUI-Reloaded-master AmuleWebUI-Reloaded && \
     rm -rf AmuleWebUI-Reloaded.zip AmuleWebUI-Reloaded/doc-images
