@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.3-12 (2022/11/06)
+
+* Execute mod auto_share after mod auto_restart
+* Improve traces for mod auto_restart
+* Exit on error in the entrypoint
+
 ## 2.3.3-11 (2022/09/23)
 
 * Fix Dockerfile with new Alpine Edge packages
