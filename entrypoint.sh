@@ -3,6 +3,53 @@
 # Exit on error. For debug use set -x
 set -e
 
+mod_auto_restart() {
+    MOD_AUTO_RESTART_ENABLED=${MOD_AUTO_RESTART_ENABLED:-"false"}
+    MOD_AUTO_RESTART_CRON=${MOD_AUTO_RESTART_CRON:-"0 6 * * *"} # every day at 6:00 h
+    if [ "${MOD_AUTO_RESTART_ENABLED}" = "true" ]; then
+        # Fix bugs https://github.com/ngosang/docker-amule/issues/7
+        # Auto restart amuled process. The cron scheduler is configurable.
+        printf "[MOD_AUTO_RESTART] aMule will be restarted automatically (cron %s)... You can disable this mod with MOD_AUTO_RESTART_ENABLED=false\n" "$MOD_AUTO_RESTART_CRON"
+        # Avoid adding several times the same cron task when the container restarts
+        if ! grep -q "MOD_AUTO_RESTART" "/etc/crontabs/root" ; then
+            printf "%s /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && kill \$(pidof amuled)'\n" "$MOD_AUTO_RESTART_CRON" >> /etc/crontabs/root
+        fi
+        crond -l 8 -f > /dev/stdout 2> /dev/stderr &
+    fi
+}
+
+mod_fix_kad_graph() {
+    MOD_FIX_KAD_GRAPH_ENABLED=${MOD_FIX_KAD_GRAPH_ENABLED:-"false"}
+    if [ "${MOD_FIX_KAD_GRAPH_ENABLED}" = "true" ]; then
+        # Fix bug https://github.com/amule-project/amule/issues/265
+        # Removes the images causing the issue. They won't be visible in the Web UI.
+        # grep -rnw '/usr/share/amule/webserver' -e 'amule_stats_kad.png'
+        printf "[MOD_FIX_KAD_GRAPH] Removing Kad stats graph to fix potential crash... You can disable this mod with MOD_FIX_KAD_GRAPH_ENABLED=false\n"
+        sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/default/amuleweb-main-kad.php
+        sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-kad.php
+        sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-stats.php
+    fi
+}
+
+mod_auto_share() {
+    MOD_AUTO_SHARE_ENABLED=${MOD_AUTO_SHARE_ENABLED:-"false"}
+    MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-"/incoming"}
+    if [ "${MOD_AUTO_SHARE_ENABLED}" = "true" ]; then
+        # Fix issue https://github.com/ngosang/docker-amule/issues/9
+        # Share all the directories (separated by semicolon ';') and subdirectories in aMule.
+        printf "[MOD_AUTO_SHARE] Sharing the following directories with sub-directories: %s ... You can disable this mod with MOD_AUTO_SHARE_ENABLED=false\n" "$MOD_AUTO_SHARE_DIRECTORIES"
+        SHAREDDIR_CONF=${AMULE_HOME}/shareddir.dat
+        printf "/incoming\n" > "$SHAREDDIR_CONF"
+        IN="$MOD_AUTO_SHARE_DIRECTORIES"
+        while [ "$IN" != "$iter" ] ;do
+            iter=${IN%%;*}
+            IN="${IN#"$iter";}"
+            printf "[MOD_AUTO_SHARE] Sharing directory '%s' with sub-directories...\n" "$iter"
+            find "$iter" -type d >> "$SHAREDDIR_CONF"
+        done
+    fi
+}
+
 AMULE_UID=${PUID:-1000}
 AMULE_GID=${PGID:-1000}
 
@@ -287,56 +334,19 @@ if [ -n "${WEBUI_PWD}" ]; then
     sed -i "s/^AdminPassword=.*/AdminPassword=${AMULE_WEBUI_ENCODED_PWD}/" "${REMOTE_CONF}"
 fi
 
-# Modifications / Fixes
-MOD_AUTO_RESTART_ENABLED=${MOD_AUTO_RESTART_ENABLED:-"false"}
-MOD_AUTO_RESTART_CRON=${MOD_AUTO_RESTART_CRON:-"0 6 * * *"} # every day at 6:00 h
-if [ "${MOD_AUTO_RESTART_ENABLED}" = "true" ]; then
-    # Fix bugs https://github.com/ngosang/docker-amule/issues/7
-    # Auto restart amuled process. The cron scheduler is configurable.
-    printf "[MOD_AUTO_RESTART] aMule will be restarted automatically (cron %s)... You can disable this mod with MOD_AUTO_RESTART_ENABLED=false\n" "$MOD_AUTO_RESTART_CRON"
-    # Avoid adding several times the same cron task when the container restarts
-    if ! grep -q "MOD_AUTO_RESTART" "/etc/crontabs/root" ; then
-        printf "%s /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && kill \$(pidof amuled)'\n" "$MOD_AUTO_RESTART_CRON" >> /etc/crontabs/root
-    fi
-    crond -l 8 -f > /dev/stdout 2> /dev/stderr &
-fi
-
-MOD_AUTO_SHARE_ENABLED=${MOD_AUTO_SHARE_ENABLED:-"false"}
-MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-"/incoming"}
-if [ "${MOD_AUTO_SHARE_ENABLED}" = "true" ]; then
-    # Fix issue https://github.com/ngosang/docker-amule/issues/9
-    # Share all the directories (separated by semicolon ';') and subdirectories in aMule.
-    printf "[MOD_AUTO_SHARE] Sharing the following directories with sub-directories: %s ... You can disable this mod with MOD_AUTO_SHARE_ENABLED=false\n" "$MOD_AUTO_SHARE_DIRECTORIES"
-    SHAREDDIR_CONF=${AMULE_HOME}/shareddir.dat
-    printf "/incoming\n" > "$SHAREDDIR_CONF"
-    IN="$MOD_AUTO_SHARE_DIRECTORIES"
-    while [ "$IN" != "$iter" ] ;do
-        iter=${IN%%;*}
-        IN="${IN#"$iter";}"
-        printf "[MOD_AUTO_SHARE] Sharing directory '%s' with sub-directories...\n" "$iter"
-        find "$iter" -type d >> "$SHAREDDIR_CONF"
-    done
-fi
-
-MOD_FIX_KAD_GRAPH_ENABLED=${MOD_FIX_KAD_GRAPH_ENABLED:-"false"}
-if [ "${MOD_FIX_KAD_GRAPH_ENABLED}" = "true" ]; then
-    # Fix bug https://github.com/amule-project/amule/issues/265
-    # Removes the images causing the issue. They won't be visible in the Web UI.
-    # grep -rnw '/usr/share/amule/webserver' -e 'amule_stats_kad.png'
-    printf "[MOD_FIX_KAD_GRAPH] Removing Kad stats graph to fix potential crash... You can disable this mod with MOD_FIX_KAD_GRAPH_ENABLED=false\n"
-    sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/default/amuleweb-main-kad.php
-    sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-kad.php
-    sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-stats.php
-fi
-
 # Set permissions
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_INCOMING}
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_TEMP}
 chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_HOME}
 
+# Modifications / Fixes
+mod_auto_restart
+mod_fix_kad_graph
+
 # Start aMule
 EXIT_CODE=0
 while [ $EXIT_CODE -eq 0 ]; do
+    mod_auto_share
     su "${AMULE_USER}" -s "/bin/sh" -c "amuled -c ${AMULE_HOME} -o"
     EXIT_CODE=$?
     printf "aMule exited with exit code: %d\n" "$EXIT_CODE"
