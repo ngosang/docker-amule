@@ -344,11 +344,15 @@ mod_auto_restart
 mod_fix_kad_graph
 
 # Start aMule
-EXIT_CODE=0
-while [ $EXIT_CODE -eq 0 ]; do
+while true; do
     mod_auto_share
     su "${AMULE_USER}" -s "/bin/sh" -c "amuled -c ${AMULE_HOME} -o"
     EXIT_CODE=$?
-    printf "aMule exited with exit code: %d\n" "$EXIT_CODE"
+    if [ $EXIT_CODE -eq 0 ]; then
+        printf "[MOD_AUTO_RESTART] Restarting aMule...\n"
+    else
+        printf "aMule exited with exit code: %d\n" "$EXIT_CODE"
+        break
+    fi
 done
 exit $EXIT_CODE
