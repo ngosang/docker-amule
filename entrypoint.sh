@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-# Uncomment for debug
-#set -x
+# Exit on error. For debug use set -x
+set -e
 
 AMULE_UID=${PUID:-1000}
 AMULE_GID=${PGID:-1000}
