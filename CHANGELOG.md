@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.3-13 (2022/11/29)
+
+* Add linux/riscv64 architecture
+* Rebuild with latest base Docker image
+
 ## 2.3.3-12 (2022/11/06)
 
 * Execute mod auto_share after mod auto_restart
