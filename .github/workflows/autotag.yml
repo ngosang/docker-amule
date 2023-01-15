@@ -16,4 +16,5 @@ jobs:
         name: Auto Tag
         uses: Klemensas/action-autotag@stable
         with:
+          GITHUB_TOKEN: "${{ secrets.GH_PAT }}"
           tag_prefix: ""
