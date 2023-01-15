@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.3-14 (2023/01/15)
+
+* Add cURL package
+* Rebuild with latest base Docker image
+* CI/CD: Update GitHub Actions
+
 ## 2.3.3-13 (2022/11/29)
 
 * Add linux/riscv64 architecture
