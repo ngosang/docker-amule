@@ -31,6 +31,21 @@ mod_fix_kad_graph() {
     fi
 }
 
+mod_fix_kad_bootstrap() {
+    MOD_FIX_KAD_BOOTSTRAP_ENABLED=${MOD_FIX_KAD_BOOTSTRAP_ENABLED:-"true"}
+    if [ "${MOD_FIX_KAD_BOOTSTRAP_ENABLED}" = "true" ]; then
+        # Fix bug https://github.com/ngosang/docker-amule/issues/33
+        # Download nodes.dat if the file does not exist
+        if [ ! -f "${AMULE_HOME}/nodes.dat" ]; then
+            printf "[MOD_FIX_KAD_BOOTSTRAP] Downloading nodes.dat from %s ... You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n" "${KAD_NODES_DAT_URL}"
+            curl -s -o "${AMULE_HOME}/nodes.dat" "${KAD_NODES_DAT_URL}"
+            printf "[MOD_FIX_KAD_BOOTSTRAP] Downloaded successfully!\n"
+        else
+            printf "[MOD_FIX_KAD_BOOTSTRAP] File nodes.dat already exist. You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n"
+        fi
+    fi
+}
+
 mod_auto_share() {
     MOD_AUTO_SHARE_ENABLED=${MOD_AUTO_SHARE_ENABLED:-"false"}
     MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-"/incoming"}
@@ -58,6 +73,7 @@ AMULE_TEMP=/temp
 AMULE_HOME=/home/amule/.aMule
 AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
+KAD_NODES_DAT_URL="http://upd.emule-security.org/nodes.dat"
 
 # Create configuration files if don't exist
 AMULE_GROUP="amule"
@@ -210,7 +226,7 @@ AllcatType=0
 ShowAllNotCats=0
 SmartIdState=0
 DropSlowSources=0
-KadNodesUrl=http://upd.emule-security.org/nodes.dat
+KadNodesUrl=${KAD_NODES_DAT_URL}
 Ed2kServersUrl=http://upd.emule-security.org/server.met
 ShowRatesOnTitle=0
 GeoLiteCountryUpdateUrl=http://mailfud.org/geoip-legacy/GeoIP.dat.gz
@@ -342,6 +358,7 @@ chown -R "${AMULE_UID}:${AMULE_GID}" ${AMULE_HOME}
 # Modifications / Fixes
 mod_auto_restart
 mod_fix_kad_graph
+mod_fix_kad_bootstrap
 
 # Start aMule
 while true; do

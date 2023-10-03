@@ -70,6 +70,7 @@ services:
       - MOD_AUTO_SHARE_ENABLED=false
       - MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies
       - MOD_FIX_KAD_GRAPH_ENABLED=true
+      - MOD_FIX_KAD_BOOTSTRAP_ENABLED=true
     ports:
       - "4711:4711" # web ui
       - "4712:4712" # remote gui, webserver, cmd ...
@@ -103,6 +104,7 @@ docker run -d \
   -e MOD_AUTO_SHARE_ENABLED=false `#optional` \
   -e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies `#optional` \
   -e MOD_FIX_KAD_GRAPH_ENABLED=true `#optional` \
+  -e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true `#optional` \
   -v <fill_amule_configuration_path>:/home/amule/.aMule \
   -v <fill_amule_completed_downloads_path>:/incoming \
   -v <fill_amule_incomplete_downloads_path>:/temp \
@@ -131,6 +133,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |
 | `-e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` | aMule auto share directories with subdirectories. Check modifications section. |
 | `-e MOD_FIX_KAD_GRAPH_ENABLED=true` | Fix Kad stats graph bug. Check modifications section. |
+| `-e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true` | Fix Kad bootstrap bug. Check modifications section. |
 | `-v /home/amule/.aMule` | Path to save aMule configuration. |
 | `-v /incoming` | Path to completed torrents. |
 | `-v /temp` | Path to incomplete torrents. |
@@ -182,3 +185,10 @@ aMule has an issue when it renders Kad stats graph that [crash the application](
 
 As workaround, we removed the image causing the issue from the Web UI. Since the image is not requested the server doesn't crash.
 * `MOD_FIX_KAD_GRAPH_ENABLED=true`
+
+### Fix Kad bootstrap mod
+
+aMule [does not download the nodes.dat file](https://github.com/ngosang/docker-amule/issues/33) required to bootstrap the Kad network. This causes it not to connect to the Kad network.
+
+As workaround, we are downloading the `nodes.dat` file before starting aMule. The file is only downloaded if it has not been downloaded before.
+* `MOD_FIX_KAD_BOOTSTRAP_ENABLED=true`
