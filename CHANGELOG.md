@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.3-15 (2023/10/03)
+
+* Add fix Kad bootstrap mod. MOD_FIX_KAD_BOOTSTRAP
+* Rebuild with latest base Docker image
+
 ## 2.3.3-14 (2023/01/15)
 
 * Add cURL package
@@ -57,7 +62,7 @@
 * Remove support for mips64le arch, include arm/v6 arch
 * Add auto restart mod. MOD_AUTO_RESTART
 * Add auto share mod. MOD_AUTO_SHARE
-* Add fix kad graph mod. MOD_FIX_KAD_GRAPH
+* Add fix Kad graph mod. MOD_FIX_KAD_GRAPH
 
 ## 2.3.3-4 (2022/01/15)
 
