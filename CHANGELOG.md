@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.3-16 (2023/10/21)
+
+* Improve download cache/speed. FileBufferSizePref=1400
+* Include useful information in the readme
+* Rebuild with latest base Docker image
+
 ## 2.3.3-15 (2023/10/03)
 
 * Add fix Kad bootstrap mod. MOD_FIX_KAD_BOOTSTRAP
