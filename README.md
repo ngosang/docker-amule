@@ -48,6 +48,9 @@ For better download speed you have to open these ports:
 
 Here are some example snippets to help you get started creating a container.
 
+> [!NOTE]
+> When you start aMule all shared folders are scanned. The user interface will not be available until the process is finished. You can check the logs and CPU usage to know the status.
+
 ### docker-compose
 
 Compatible with docker-compose v2 schemas.
