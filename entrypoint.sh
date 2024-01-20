@@ -55,6 +55,7 @@ mod_auto_share() {
         printf "[MOD_AUTO_SHARE] Sharing the following directories with sub-directories: %s ... You can disable this mod with MOD_AUTO_SHARE_ENABLED=false\n" "$MOD_AUTO_SHARE_DIRECTORIES"
         SHAREDDIR_CONF=${AMULE_HOME}/shareddir.dat
         printf "/incoming\n" > "$SHAREDDIR_CONF"
+        iter=""
         IN="$MOD_AUTO_SHARE_DIRECTORIES"
         while [ "$IN" != "$iter" ] ;do
             iter=${IN%%;*}
