@@ -68,6 +68,8 @@ mod_auto_share() {
 
 AMULE_UID=${PUID:-1000}
 AMULE_GID=${PGID:-1000}
+TCP_PORT=${TCP_PORT:-4662}
+UDP_PORT=${UDP_PORT:-4672}
 
 AMULE_INCOMING=/incoming
 AMULE_TEMP=/temp
@@ -139,8 +141,8 @@ QueueSizePref=50
 MaxUpload=0
 MaxDownload=0
 SlotAllocation=50
-Port=4662
-UDPPort=4672
+Port=${TCP_PORT}
+UDPPort=${UDP_PORT}
 UDPEnable=1
 Address=
 Autoconnect=1
@@ -349,6 +351,13 @@ fi
 if [ -n "${WEBUI_PWD}" ]; then
     sed -i "s/^Password=.*/Password=${AMULE_WEBUI_ENCODED_PWD}/" "${AMULE_CONF}"
     sed -i "s/^AdminPassword=.*/AdminPassword=${AMULE_WEBUI_ENCODED_PWD}/" "${REMOTE_CONF}"
+fi
+# Replace ports
+if [ -n "${TCP_PORT}" ]; then
+    awk -v new_port="${TCP_PORT}" '/Port/ && !done {sub(/Port=.*/, "Port=" new_port); done=1} 1' "${AMULE_CONF}" > temp && mv temp "${AMULE_CONF}"
+fi
+if [ -n "${UDP_PORT}" ]; then
+    sed -i "s/^UDPPort=.*/UDPPort=${UDP_PORT}/" "${AMULE_CONF}"
 fi
 
 # Set permissions

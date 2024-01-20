@@ -74,6 +74,8 @@ services:
       - MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies
       - MOD_FIX_KAD_GRAPH_ENABLED=true
       - MOD_FIX_KAD_BOOTSTRAP_ENABLED=true
+      - TCP_PORT=<provide custom tcp port in amule settings>
+      - UDP_PORT=<provide custom udp port in amule settings>
     ports:
       - "4711:4711" # web ui
       - "4712:4712" # remote gui, webserver, cmd ...
@@ -108,6 +110,8 @@ docker run -d \
   -e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies `#optional` \
   -e MOD_FIX_KAD_GRAPH_ENABLED=true `#optional` \
   -e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true `#optional` \
+  -e TCP_PORT=1234 `#optional` \
+  -e UDP_PORT=1234 `#optional` \
   -v <fill_amule_configuration_path>:/home/amule/.aMule \
   -v <fill_amule_completed_downloads_path>:/incoming \
   -v <fill_amule_incomplete_downloads_path>:/temp \
@@ -119,27 +123,29 @@ docker run -d \
 
 Container images are configured using parameters passed at runtime (such as those above). These parameters are separated by a colon and indicate `<external>:<internal>` respectively. For example, `-p 8080:80` would expose port `80` from inside the container to be accessible from the host's IP on port `8080` outside the container.
 
-| Parameter | Function |
-| :----: | --- |
-| `-p 4711` | Web UI port. |
-| `-p 4712` | Remote gui, webserver, cmd port. |
-| `-p 4662` | ED2K TCP port (must be open to Internet). |
-| `-p 4665/udp` | ED2K global search UDP port (tcp port +3) (must be open to Internet). |
-| `-p 4672/udp` | ED2K UDP port (must be open to Internet). |
-| `-e PUID=1000` | for UserID - see below for explanation. |
-| `-e PGID=1000` | for GroupID - see below for explanation. |
-| `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
-| `-e GUI_PWD=<fill_password>` | Set Remote GUI password. It will overwrite the password in the config files. |
-| `-e WEBUI_PWD=<fill_password>` | Set Web UI password. It will overwrite the password in the config files. |
-| `-e MOD_AUTO_RESTART_ENABLED=true` | Enable aMule auto restart. Check modifications section. |
-| `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'` | aMule auto restart cron mask. Check modifications section. |
-| `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |
+| Parameter                                            | Function                                                                       |
+|:----------------------------------------------------:| ------------------------------------------------------------------------------ |
+| `-p 4711`                                            | Web UI port.                                                                   |
+| `-p 4712`                                            | Remote gui, webserver, cmd port.                                               |
+| `-p 4662`                                            | ED2K TCP port (must be open to Internet).                                      |
+| `-p 4665/udp`                                        | ED2K global search UDP port (tcp port +3) (must be open to Internet).          |
+| `-p 4672/udp`                                        | ED2K UDP port (must be open to Internet).                                      |
+| `-e PUID=1000`                                       | for UserID - see below for explanation.                                        |
+| `-e PGID=1000`                                       | for GroupID - see below for explanation.                                       |
+| `-e TZ=Europe/London`                                | Specify a timezone to use EG Europe/London.                                    |
+| `-e GUI_PWD=<fill_password>`                         | Set Remote GUI password. It will overwrite the password in the config files.   |
+| `-e WEBUI_PWD=<fill_password>`                       | Set Web UI password. It will overwrite the password in the config files.       |
+| `-e MOD_AUTO_RESTART_ENABLED=true`                   | Enable aMule auto restart. Check modifications section.                        |
+| `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'`               | aMule auto restart cron mask. Check modifications section.                     |
+| `-e MOD_AUTO_SHARE_ENABLED=false`                    | Enable aMule auto share. Check modifications section.                          |
 | `-e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` | aMule auto share directories with subdirectories. Check modifications section. |
-| `-e MOD_FIX_KAD_GRAPH_ENABLED=true` | Fix Kad stats graph bug. Check modifications section. |
-| `-e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true` | Fix Kad bootstrap bug. Check modifications section. |
-| `-v /home/amule/.aMule` | Path to save aMule configuration. |
-| `-v /incoming` | Path to completed torrents. |
-| `-v /temp` | Path to incomplete torrents. |
+| `-e MOD_FIX_KAD_GRAPH_ENABLED=true`                  | Fix Kad stats graph bug. Check modifications section.                          |
+| `-e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true`              | Fix Kad bootstrap bug. Check modifications section.                            |
+| `-e TCP_PORT=1234`                                   | Provide custom TCP port in amule settings                                      |
+| `-e UDP_PORT=1234`                                   | Provide custom UDP port in amule settings                                      |
+| `-v /home/amule/.aMule`                              | Path to save aMule configuration.                                              |
+| `-v /incoming`                                       | Path to completed torrents.                                                    |
+| `-v /temp`                                           | Path to incomplete torrents.                                                   |
 
 ## User / Group Identifiers
 
@@ -167,10 +173,12 @@ You can change the theme editing the `amule.conf` file and changing `Template=Am
 ### Auto restart mod
 
 aMule has some issues that cause it to stop working properly after a few days:
+
 * [Memory leak](https://github.com/amule-project/amule/issues/314)
 * [Network disconnection](https://github.com/amule-project/amule/issues/315)
 
 As workaround, we have implemented a cron scheduler to restart aMule from time to time. To enable this mod set these environment variables:
+
 * `MOD_AUTO_RESTART_ENABLED=true`
 * `MOD_AUTO_RESTART_CRON=0 6 * * *` => Cron mask is configurable. In the example it restarts everyday at 6:00h.
 
@@ -179,6 +187,7 @@ As workaround, we have implemented a cron scheduler to restart aMule from time t
 By default, aMule only shares "incoming" directory and shared folders cannot be selected in the Web UI
 
 We have added this option in the Docker image. The configuration is updated when the container starts. Note that sub-directories are also shared!
+
 * `MOD_AUTO_SHARE_ENABLED=true`
 * `MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` => List of directories separated by semicolon ';'. Subdirectories will be shared too.
 
@@ -187,6 +196,7 @@ We have added this option in the Docker image. The configuration is updated when
 aMule has an issue when it renders Kad stats graph that [crash the application](https://github.com/amule-project/amule/issues/265). The crash happens when you enter in the Web UI stats after few days running.
 
 As workaround, we removed the image causing the issue from the Web UI. Since the image is not requested the server doesn't crash.
+
 * `MOD_FIX_KAD_GRAPH_ENABLED=true`
 
 ### Fix Kad bootstrap mod
@@ -194,4 +204,5 @@ As workaround, we removed the image causing the issue from the Web UI. Since the
 aMule [does not download the nodes.dat file](https://github.com/ngosang/docker-amule/issues/33) required to bootstrap the Kad network. This causes it not to connect to the Kad network.
 
 As workaround, we are downloading the `nodes.dat` file before starting aMule. The file is only downloaded if it has not been downloaded before.
+
 * `MOD_FIX_KAD_BOOTSTRAP_ENABLED=true`
