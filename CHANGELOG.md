@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.3-18 (2024/05/31)
+
+* Rebuild with latest base Docker image
+
 ## 2.3.3-17 (2024/01/20)
 
 * Fix MOD_AUTO_SHARE to re-scan directories after aMule restart
