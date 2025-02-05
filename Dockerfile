@@ -6,7 +6,7 @@ WORKDIR /tmp
 RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing amule amule-doc
 
 # Install a modern Web UI
-RUN AMULEWEBUI_RELOADED_COMMIT=1a85ead05e26202de8d98af4248189a869a24795 && \
+RUN AMULEWEBUI_RELOADED_COMMIT=7c708c9ed95e5298fd45fea232a9341643eb7c66 && \
     cd /usr/share/amule/webserver && \
     wget -O AmuleWebUI-Reloaded.zip https://github.com/MatteoRagni/AmuleWebUI-Reloaded/archive/${AMULEWEBUI_RELOADED_COMMIT}.zip && \
     unzip AmuleWebUI-Reloaded.zip && \
