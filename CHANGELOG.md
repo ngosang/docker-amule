@@ -3,7 +3,7 @@
 ## 2.3.3-19 (2025/02/05)
 
 * Update AmuleWebUI-Reloaded theme
-* Update docker-compose to last specification
+* Update docker-compose to the latest specification
 * Rebuild with latest base Docker image
 
 ## 2.3.3-18 (2024/05/31)
