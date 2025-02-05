@@ -1,4 +1,4 @@
-FROM alpine:3.15 as builder
+FROM alpine:3.15 AS builder
 
 # This is optimized for GitHub Actions.
 # For performance CXXFLAGS="-O2 -pipe" & MAKE_JOBS=$(( $(nproc) + 1 ))

@@ -1,4 +1,4 @@
-FROM alpine:edge as builder
+FROM alpine:edge AS builder
 
 WORKDIR /tmp
 
@@ -46,6 +46,10 @@ ENTRYPOINT ["/home/amule/entrypoint.sh"]
 #
 # => Build Docker image
 # docker build -t ngosang/amule:test .
+#
+# => Build multi-arch Docker image
+# docker buildx create --use
+# docker buildx build -t ngosang/amule:test --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/riscv64,linux/s390x .
 #
 # => Reference Alpine packages
 # https://git.alpinelinux.org/aports/tree/testing/amule
