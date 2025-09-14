@@ -69,8 +69,8 @@ mod_auto_share() {
 AMULE_UID=${PUID:-1000}
 AMULE_GID=${PGID:-1000}
 
-AMULE_INCOMING=/incoming
-AMULE_TEMP=/temp
+AMULE_INCOMING=${INCOMING_DIR:-"/incoming"}
+AMULE_TEMP=${TEMP_DIR:-"/temp"}
 AMULE_HOME=/home/amule/.aMule
 AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
