@@ -39,6 +39,7 @@ mod_fix_kad_bootstrap() {
         if [ ! -f "${AMULE_HOME}/nodes.dat" ]; then
             printf "[MOD_FIX_KAD_BOOTSTRAP] Downloading nodes.dat from %s ... You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n" "${KAD_NODES_DAT_URL}"
             curl -s -o "${AMULE_HOME}/nodes.dat" "${KAD_NODES_DAT_URL}"
+            chown ${AMULE_USER}:${AMULE_GROUP} "${AMULE_HOME}/nodes.dat"
             printf "[MOD_FIX_KAD_BOOTSTRAP] Downloaded successfully!\n"
         else
             printf "[MOD_FIX_KAD_BOOTSTRAP] File nodes.dat already exist. You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n"
@@ -63,6 +64,7 @@ mod_auto_share() {
             printf "[MOD_AUTO_SHARE] Sharing directory '%s' with sub-directories...\n" "$iter"
             find "$iter" -type d >> "$SHAREDDIR_CONF"
         done
+        chown ${AMULE_USER}:${AMULE_GROUP} "$SHAREDDIR_CONF"
     fi
 }
 
