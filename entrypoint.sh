@@ -58,7 +58,8 @@ mod_auto_share() {
         SHAREDDIR_TMP="${SHAREDDIR_CONF}.tmp"
         printf "%s\n" "${AMULE_INCOMING}" > "$SHAREDDIR_TMP"
         IFS=';'
-        set -- "$MOD_AUTO_SHARE_DIRECTORIES"
+        # shellcheck disable=SC2086
+        set -- $MOD_AUTO_SHARE_DIRECTORIES
         for raw_dir in "$@"; do
             dir=$(printf '%s' "$raw_dir" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             [ -z "$dir" ] && continue
