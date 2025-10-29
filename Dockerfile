@@ -1,4 +1,4 @@
-FROM alpine:edge AS builder
+FROM alpine:3.22.2 AS builder
 
 WORKDIR /tmp
 
@@ -13,7 +13,7 @@ RUN AMULEWEBUI_RELOADED_COMMIT=704ae1c861561513c010353320bb1ca9f0f2b9fe && \
     mv AmuleWebUI-Reloaded-* AmuleWebUI-Reloaded && \
     rm -rf AmuleWebUI-Reloaded.zip AmuleWebUI-Reloaded/doc-images AmuleWebUI-Reloaded/README.md
 
-FROM alpine:edge
+FROM alpine:3.22.2
 
 LABEL maintainer="ngosang@hotmail.es"
 
