@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.3-20 (2025/10/29)
+
+* Update AmuleWebUI-Reloaded theme (fixes udp_port and reconn_en options)
+* Fix file ownership for nodes.dat and shareddir.dat
+* Fix duplicate paths in MOD_AUTO_SHARE_DIRECTORIES env var
+* Make /incoming and /temp paths customizable with INCOMING_DIR and TEMP_DIR env vars
+* Replace base Docker image with Alpine Linux 3.22
+
 ## 2.3.3-19 (2025/02/05)
 
 * Update AmuleWebUI-Reloaded theme
