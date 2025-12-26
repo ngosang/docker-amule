@@ -1,0 +1,14 @@
+#!/command/with-contenv sh
+
+# Exit on error. For debug set SCRIPT_DEBUG=true.
+set -e
+[ "${SCRIPT_DEBUG:-"false"}" = "true" ] && set -x
+
+MOD_AUTO_RESTART_ENABLED=${MOD_AUTO_RESTART_ENABLED:-"false"}
+if [ "${MOD_AUTO_RESTART_ENABLED}" = "true" ]; then
+    printf "[SVC-CROND] Starting crond...\n"
+    /usr/sbin/crond -l 8 -f > /dev/stdout 2> /dev/stderr
+    printf "[SVC-CROND] crond stopped\n"
+else
+    sleep infinity
+fi

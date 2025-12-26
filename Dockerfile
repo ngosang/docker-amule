@@ -17,9 +17,37 @@ FROM alpine:3.22.2
 
 LABEL maintainer="ngosang@hotmail.es"
 
+ARG TARGETARCH
+ARG S6_OVERLAY_VERSION="3.2.1.0"
+
 # Install packages
-RUN apk add --no-cache libedit libgcc libintl libpng libstdc++ libupnp musl wxwidgets zlib tzdata pwgen mandoc curl && \
+RUN apk add --no-cache libedit libgcc libintl libpng libstdc++ libupnp musl wxwidgets zlib tzdata pwgen mandoc curl coreutils xz && \
     apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing crypto++
+
+# Install s6-overlay
+RUN set -eux; \
+    case "${TARGETARCH}" in \
+      amd64)   S6_ARCH="x86_64" ;; \
+      386)     S6_ARCH="i686" ;; \
+      arm)     S6_ARCH="armhf" ;; \
+      arm64)   S6_ARCH="aarch64" ;; \
+      ppc64)   S6_ARCH="powerpc64" ;; \
+      ppc64le) S6_ARCH="powerpc64le" ;; \
+      riscv64) S6_ARCH="riscv64" ;; \
+      s390x)   S6_ARCH="s390x" ;; \
+      *)       echo "Unsupported TARGETARCH=${TARGETARCH}" >&2; exit 1 ;; \
+    esac; \
+    echo "S6_ARCH=${S6_ARCH}"; \
+    curl -fsSL -o /tmp/s6-overlay-noarch.tar.xz \
+      "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz"; \
+    curl -fsSL -o /tmp/s6-overlay-${S6_ARCH}.tar.xz \
+      "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz"; \
+    tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz; \
+    tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz; \
+    rm -f /tmp/s6-overlay-noarch.tar.xz /tmp/s6-overlay-${S6_ARCH}.tar.xz
+
+# Copy /etc files
+COPY etc /etc
 
 # Copy binaries and Man doc
 COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
@@ -33,14 +61,11 @@ RUN ldd /usr/bin/alcc && \
     ldd /usr/bin/amuleweb && \
     ldd /usr/bin/ed2k
 
-# Add entrypoint
-COPY entrypoint.sh /home/amule/entrypoint.sh
-
 WORKDIR /home/amule
 
 EXPOSE 4711/tcp 4712/tcp 4662/tcp 4665/udp 4672/udp
 
-ENTRYPOINT ["/home/amule/entrypoint.sh"]
+ENTRYPOINT ["/init"]
 
 # HELP
 #

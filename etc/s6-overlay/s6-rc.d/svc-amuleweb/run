@@ -1,0 +1,14 @@
+#!/command/with-contenv sh
+
+# Exit on error. For debug set SCRIPT_DEBUG=true.
+set -e
+AMULEWEB_WRAPPER_DEBUG=
+[ "${SCRIPT_DEBUG:-"false"}" = "true" ] && set -x && AMULEWEB_WRAPPER_DEBUG="-x"
+
+AMULE_HOME=/home/amule/.aMule
+AMULE_CONF=${AMULE_HOME}/amule.conf
+AMULE_USER=$(getent passwd "${PUID:-1000}" | cut -d: -f1)
+AMULE_WEB_PORT=$(sed -n '/\[WebServer\]/,$p' ${AMULE_CONF} | grep '^Port=' | cut -d= -f2)
+
+s6-notifyoncheck -d -n 10 -w 1000 -c "nc -z localhost ${AMULE_WEB_PORT}" \
+    s6-setuidgid ${AMULE_USER} sh ${AMULEWEB_WRAPPER_DEBUG} /etc/s6-overlay/s6-rc.d/svc-amuleweb/amuleweb_wrapper.sh

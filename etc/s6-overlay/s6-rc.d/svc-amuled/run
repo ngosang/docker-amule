@@ -1,0 +1,17 @@
+#!/command/with-contenv sh
+
+# Exit on error. For debug set SCRIPT_DEBUG=true.
+set -e
+[ "${SCRIPT_DEBUG:-"false"}" = "true" ] && set -x
+
+AMULE_HOME=/home/amule/.aMule
+AMULE_CONF=${AMULE_HOME}/amule.conf
+AMULE_USER=$(getent passwd "${PUID:-1000}" | cut -d: -f1)
+AMULE_WEB_PORT=$(sed -n '/\[WebServer\]/,$p' ${AMULE_CONF} | grep '^Port=' | cut -d= -f2)
+
+printf "[SVC-AMULED] Starting aMule...\n"
+
+s6-notifyoncheck -d -n 10 -w 1000 -c "nc -z localhost ${AMULE_WEB_PORT}" \
+    s6-setuidgid ${AMULE_USER} /usr/bin/amuled -c ${AMULE_HOME} -o
+
+printf "[SVC-AMULED] aMule stopped\n"
