@@ -1,0 +1,15 @@
+#!/command/with-contenv sh
+
+# Exit on error. For debug set SCRIPT_DEBUG=true.
+set -e
+[ "${SCRIPT_DEBUG:-"false"}" = "true" ] && set -x
+
+printf "[SVC-CROND-FINISH] crond cleanup started.\n"
+
+for pid in $(pidof crond); do
+    kill ${pid}
+    printf "[SVC-CROND-FINISH] Waiting crond process PID ${pid} to stop...\n"
+    tail --pid=${pid} -f /dev/null
+done
+
+printf "[SVC-CROND-FINISH] crond cleanup ended.\n"

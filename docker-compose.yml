@@ -9,6 +9,8 @@ services:
       - TZ=Europe/London
       - GUI_PWD=<fill_password>
       - WEBUI_PWD=<fill_password>
+      - TEMP_DIR=/temp
+      - INCOMING_DIR=/incoming
       - MOD_AUTO_RESTART_ENABLED=true
       - MOD_AUTO_RESTART_CRON=0 6 * * *
       - MOD_AUTO_SHARE_ENABLED=false

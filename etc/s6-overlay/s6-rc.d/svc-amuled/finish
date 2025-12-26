@@ -1,0 +1,21 @@
+#!/command/with-contenv sh
+
+# Exit on error. For debug set SCRIPT_DEBUG=true.
+set -e
+[ "${SCRIPT_DEBUG:-"false"}" = "true" ] && set -x
+
+printf "[SVC-AMULED-FINISH] aMule cleanup started.\n"
+
+for pid in $(pidof amuled); do
+    kill ${pid}
+    printf "[SVC-AMULED-FINISH] Waiting aMule process PID ${pid} to stop...\n"
+    tail --pid=${pid} -f /dev/null
+done
+
+for pid in $(pidof amuleweb); do
+    kill ${pid}
+    printf "[SVC-AMULED-FINISH] Waiting aMuleWeb process PID ${pid} to stop...\n"
+    tail --pid=${pid} -f /dev/null
+done
+
+printf "[SVC-AMULED-FINISH] aMule cleanup ended.\n"

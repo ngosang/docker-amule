@@ -68,6 +68,8 @@ services:
       - TZ=Europe/London
       - GUI_PWD=<fill_password>
       - WEBUI_PWD=<fill_password>
+      - TEMP_DIR=/temp
+      - INCOMING_DIR=/incoming
       - MOD_AUTO_RESTART_ENABLED=true
       - MOD_AUTO_RESTART_CRON=0 6 * * *
       - MOD_AUTO_SHARE_ENABLED=false
@@ -102,6 +104,8 @@ docker run -d \
   -e TZ=Europe/London \
   -e GUI_PWD=<fill_password> `#optional` \
   -e WEBUI_PWD=<fill_password> `#optional` \
+  -e TEMP_DIR=/temp `#optional` \
+  -e INCOMING_DIR=/incoming `#optional` \
   -e MOD_AUTO_RESTART_ENABLED=true `#optional` \
   -e 'MOD_AUTO_RESTART_CRON=0 6 * * *' `#optional` \
   -e MOD_AUTO_SHARE_ENABLED=false `#optional` \
@@ -131,15 +135,17 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
 | `-e GUI_PWD=<fill_password>` | Set Remote GUI password. It will overwrite the password in the config files. |
 | `-e WEBUI_PWD=<fill_password>` | Set Web UI password. It will overwrite the password in the config files. |
+| `-e TEMP_DIR=/temp` | Set path to completed files. |
+| `-e INCOMING_DIR=/incoming` | Set path to incompleted files. |
 | `-e MOD_AUTO_RESTART_ENABLED=true` | Enable aMule auto restart. Check modifications section. |
 | `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'` | aMule auto restart cron mask. Check modifications section. |
 | `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |
 | `-e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` | aMule auto share directories with subdirectories. Check modifications section. |
 | `-e MOD_FIX_KAD_GRAPH_ENABLED=true` | Fix Kad stats graph bug. Check modifications section. |
 | `-e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true` | Fix Kad bootstrap bug. Check modifications section. |
-| `-v /home/amule/.aMule` | Path to save aMule configuration. |
-| `-v /incoming` | Path to completed torrents. |
-| `-v /temp` | Path to incomplete torrents. |
+| `-v /home/amule/.aMule` | Persisting path to save aMule configuration. |
+| `-v /incoming` | Persisting path to completed files. |
+| `-v /temp` | Persisting path to incomplete files. |
 
 ## User / Group Identifiers
 

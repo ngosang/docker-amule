@@ -1,20 +1,23 @@
-#!/usr/bin/env sh
+#!/command/with-contenv sh
 
-# Exit on error. For debug use set -x
+# Exit on error. For debug set SCRIPT_DEBUG=true.
 set -e
+[ "${SCRIPT_DEBUG:-"false"}" = "true" ] && set -x
 
+printf "[INIT-AMULE-CONFIG] aMule config initialization started.\n"
+
+# Functions
 mod_auto_restart() {
     MOD_AUTO_RESTART_ENABLED=${MOD_AUTO_RESTART_ENABLED:-"false"}
     MOD_AUTO_RESTART_CRON=${MOD_AUTO_RESTART_CRON:-"0 6 * * *"} # every day at 6:00 h
     if [ "${MOD_AUTO_RESTART_ENABLED}" = "true" ]; then
         # Fix bugs https://github.com/ngosang/docker-amule/issues/7
         # Auto restart amuled process. The cron scheduler is configurable.
-        printf "[MOD_AUTO_RESTART] aMule will be restarted automatically (cron %s)... You can disable this mod with MOD_AUTO_RESTART_ENABLED=false\n" "$MOD_AUTO_RESTART_CRON"
+        printf "[INIT-AMULE-CONFIG] [MOD_AUTO_RESTART] aMule will be restarted automatically (cron %s)... You can disable this mod with MOD_AUTO_RESTART_ENABLED=false\n" "$MOD_AUTO_RESTART_CRON"
         # Avoid adding several times the same cron task when the container restarts
         if ! grep -q "MOD_AUTO_RESTART" "/etc/crontabs/root" ; then
-            printf "%s /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && kill \$(pidof amuled)'\n" "$MOD_AUTO_RESTART_CRON" >> /etc/crontabs/root
+            printf "%s /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && /command/s6-svc -r /run/service/svc-amuled'\n" "$MOD_AUTO_RESTART_CRON" >> /etc/crontabs/root
         fi
-        crond -l 8 -f > /dev/stdout 2> /dev/stderr &
     fi
 }
 
@@ -24,7 +27,7 @@ mod_fix_kad_graph() {
         # Fix bug https://github.com/amule-project/amule/issues/265
         # Removes the images causing the issue. They won't be visible in the Web UI.
         # grep -rnw '/usr/share/amule/webserver' -e 'amule_stats_kad.png'
-        printf "[MOD_FIX_KAD_GRAPH] Removing Kad stats graph to fix potential crash... You can disable this mod with MOD_FIX_KAD_GRAPH_ENABLED=false\n"
+        printf "[INIT-AMULE-CONFIG] [MOD_FIX_KAD_GRAPH] Removing Kad stats graph to fix potential crash... You can disable this mod with MOD_FIX_KAD_GRAPH_ENABLED=false\n"
         sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/default/amuleweb-main-kad.php
         sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-kad.php
         sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-stats.php
@@ -37,23 +40,23 @@ mod_fix_kad_bootstrap() {
         # Fix bug https://github.com/ngosang/docker-amule/issues/33
         # Download nodes.dat if the file does not exist
         if [ ! -f "${AMULE_HOME}/nodes.dat" ]; then
-            printf "[MOD_FIX_KAD_BOOTSTRAP] Downloading nodes.dat from %s ... You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n" "${KAD_NODES_DAT_URL}"
+            printf "[INIT-AMULE-CONFIG] [MOD_FIX_KAD_BOOTSTRAP] Downloading nodes.dat from %s ... You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n" "${KAD_NODES_DAT_URL}"
             curl -s -o "${AMULE_HOME}/nodes.dat" "${KAD_NODES_DAT_URL}"
             chown "${AMULE_USER}:${AMULE_GROUP}" "${AMULE_HOME}/nodes.dat"
-            printf "[MOD_FIX_KAD_BOOTSTRAP] Downloaded successfully!\n"
+            printf "[INIT-AMULE-CONFIG] [MOD_FIX_KAD_BOOTSTRAP] Downloaded successfully!\n"
         else
-            printf "[MOD_FIX_KAD_BOOTSTRAP] File nodes.dat already exist. You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n"
+            printf "[INIT-AMULE-CONFIG] [MOD_FIX_KAD_BOOTSTRAP] File nodes.dat already exist. You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n"
         fi
     fi
 }
 
 mod_auto_share() {
     MOD_AUTO_SHARE_ENABLED=${MOD_AUTO_SHARE_ENABLED:-"false"}
-    MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-"/incoming"}
+    MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-$AMULE_INCOMING}
     if [ "${MOD_AUTO_SHARE_ENABLED}" = "true" ]; then
         # Fix issue https://github.com/ngosang/docker-amule/issues/9
         # Share all the directories (separated by semicolon ';') and subdirectories in aMule.
-        printf "[MOD_AUTO_SHARE] Sharing the following directories with sub-directories: %s ... You can disable this mod with MOD_AUTO_SHARE_ENABLED=false\n" "$MOD_AUTO_SHARE_DIRECTORIES"
+        printf "[INIT-AMULE-CONFIG] [MOD_AUTO_SHARE] Sharing the following directories with sub-directories: %s ... You can disable this mod with MOD_AUTO_SHARE_ENABLED=false\n" "$MOD_AUTO_SHARE_DIRECTORIES"
         SHAREDDIR_CONF="${AMULE_HOME}/shareddir.dat"
         SHAREDDIR_TMP="${SHAREDDIR_CONF}.tmp"
         printf "%s\n" "${AMULE_INCOMING}" > "$SHAREDDIR_TMP"
@@ -64,10 +67,10 @@ mod_auto_share() {
             dir=$(printf '%s' "$raw_dir" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             [ -z "$dir" ] && continue
             if [ -d "$dir" ]; then
-                printf "[MOD_AUTO_SHARE] Sharing directory '%s' with sub-directories...\n" "$dir"
+                printf "[INIT-AMULE-CONFIG] [MOD_AUTO_SHARE] Sharing directory '%s' with sub-directories...\n" "$dir"
                 find "$dir" -type d >> "$SHAREDDIR_TMP"
             else
-                printf "[MOD_AUTO_SHARE] Skipping missing directory '%s'\n" "$dir"
+                printf "[INIT-AMULE-CONFIG] [MOD_AUTO_SHARE] Skipping missing directory '%s'\n" "$dir"
             fi
         done
         sort -u "$SHAREDDIR_TMP" > "$SHAREDDIR_CONF"
@@ -78,9 +81,9 @@ mod_auto_share() {
     fi
 }
 
+# Set variables
 AMULE_UID=${PUID:-1000}
 AMULE_GID=${PGID:-1000}
-
 AMULE_INCOMING=${INCOMING_DIR:-"/incoming"}
 AMULE_TEMP=${TEMP_DIR:-"/temp"}
 AMULE_HOME=/home/amule/.aMule
@@ -88,49 +91,49 @@ AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
 KAD_NODES_DAT_URL="http://upd.emule-security.org/nodes.dat"
 
-# Create configuration files if don't exist
-AMULE_GROUP="amule"
+# Manage aMule OS group
+AMULE_GROUP=amule
 if grep -q ":${AMULE_GID}:" /etc/group; then
-    printf "Group %s already exists. Won't be created.\n" "${AMULE_GID}"
+    printf "[INIT-AMULE-CONFIG] Group %s already exists. Won't be created.\n" "${AMULE_GID}"
     AMULE_GROUP=$(getent group "${AMULE_GID}" | cut -d: -f1)
-    printf "Group %s with GID %s will be used as amule group.\n" "${AMULE_GROUP}" "${AMULE_GID}"
+    printf "[INIT-AMULE-CONFIG] Group %s with GID %s will be used as amule group.\n" "${AMULE_GROUP}" "${AMULE_GID}"
 else
-    printf "Creating group %s with GID %s ...\n" "${AMULE_GROUP}" "${AMULE_GID}"
+    printf "[INIT-AMULE-CONFIG] Creating group %s with GID %s ...\n" "${AMULE_GROUP}" "${AMULE_GID}"
     addgroup "${AMULE_GROUP}" -g "${AMULE_GID}"
 fi
 
-AMULE_USER="amule"
+# Manage aMule OS user
+AMULE_USER=amule
 if grep -q ":${AMULE_UID}:" /etc/passwd; then
-    printf "User %s already exists. Won't be added.\n" "${AMULE_UID}"
+    printf "[INIT-AMULE-CONFIG] User %s already exists. Won't be added.\n" "${AMULE_UID}"
     AMULE_USER=$(getent passwd "${AMULE_UID}" | cut -d: -f1)
-    printf "User %s with UID %s will be used as amule user.\n" "${AMULE_USER}" "${AMULE_UID}"
+    printf "[INIT-AMULE-CONFIG] User %s with UID %s will be used as amule user.\n" "${AMULE_USER}" "${AMULE_UID}"
 else
-    printf "Creating user %s with UID %s ...\n" "${AMULE_USER}" "${AMULE_UID}"
+    printf "[INIT-AMULE-CONFIG] Creating user %s with UID %s ...\n" "${AMULE_USER}" "${AMULE_UID}"
     adduser "${AMULE_USER}" -u "${AMULE_UID}" -G "${AMULE_GROUP}" -s "/sbin/nologin" -h "/home/amule" -H -D -g "First Last,RoomNumber,WorkPhone,HomePhone"
 fi
 
+# Manage aMule directories
 if [ ! -d "${AMULE_INCOMING}" ]; then
-    printf "Directory %s does not exists. Creating ...\n" "${AMULE_INCOMING}"
+    printf "[INIT-AMULE-CONFIG] Directory %s does not exists. Creating ...\n" "${AMULE_INCOMING}"
     mkdir -p "${AMULE_INCOMING}"
 fi
-
 if [ ! -d "${AMULE_TEMP}" ]; then
-    printf "Directory %s does not exists. Creating ...\n" "${AMULE_TEMP}"
+    printf "[INIT-AMULE-CONFIG] Directory %s does not exists. Creating ...\n" "${AMULE_TEMP}"
     mkdir -p "${AMULE_TEMP}"
 fi
-
 if [ ! -d ${AMULE_HOME} ]; then
-    printf "%s directory NOT found. Creating directory ...\n" "${AMULE_HOME}"
+    printf "[INIT-AMULE-CONFIG] %s directory NOT found. Creating directory ...\n" "${AMULE_HOME}"
     mkdir -p "${AMULE_HOME}"
 fi
 
+# Encode aMule passwords
 if [ -z "${GUI_PWD}" ]; then
     AMULE_GUI_PWD=$(pwgen -s 14)
 else
     AMULE_GUI_PWD="${GUI_PWD}"
 fi
 AMULE_GUI_ENCODED_PWD=$(printf "%s" "${AMULE_GUI_PWD}" | md5sum | cut -d ' ' -f 1)
-
 if [ -z "${WEBUI_PWD}" ]; then
     AMULE_WEBUI_PWD=$(pwgen -s 14)
 else
@@ -138,11 +141,12 @@ else
 fi
 AMULE_WEBUI_ENCODED_PWD=$(printf "%s" "${AMULE_WEBUI_PWD}" | md5sum | cut -d ' ' -f 1)
 
+# Create aMule configuration files if missing
 if [ ! -f ${AMULE_CONF} ]; then
-    printf "Remote GUI password: %s\n" "${AMULE_GUI_PWD}"
-    printf "Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
+    printf "[INIT-AMULE-CONFIG] Remote GUI password: %s\n" "${AMULE_GUI_PWD}"
+    printf "[INIT-AMULE-CONFIG] Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
 
-    printf "%s file NOT found. Generating new default configuration ...\n" "${AMULE_CONF}"
+    printf "[INIT-AMULE-CONFIG] %s file NOT found. Generating new default configuration ...\n" "${AMULE_CONF}"
     cat > ${AMULE_CONF} <<- EOM
 [eMule]
 AppVersion=2.3.3
@@ -320,18 +324,18 @@ CoreCommand=
 GUIEnabled=0
 GUICommand=
 [HTTPDownload]
-URL_1=http://upd.emule-security.org/ipfilter.zip 
+URL_1=http://upd.emule-security.org/ipfilter.zip
 EOM
-    printf "%s successfullly generated.\n" "${AMULE_CONF}"
+    printf "[INIT-AMULE-CONFIG] %s successfullly generated.\n" "${AMULE_CONF}"
 else
-    printf "%s file found. Using existing configuration.\n" "${AMULE_CONF}"
+    printf "[INIT-AMULE-CONFIG] %s file found. Using existing configuration.\n" "${AMULE_CONF}"
 fi
 
 if [ ! -f ${REMOTE_CONF} ]; then
-    printf "Remote GUI password: %s\n" "${AMULE_GUI_PWD}"
-    printf "Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
+    printf "[INIT-AMULE-CONFIG] Remote GUI password: %s\n" "${AMULE_GUI_PWD}"
+    printf "[INIT-AMULE-CONFIG] Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
 
-    printf "%s file NOT found. Generating new default configuration ...\n" "${REMOTE_CONF}"
+    printf "[INIT-AMULE-CONFIG] %s file NOT found. Generating new default configuration ...\n" "${REMOTE_CONF}"
     cat > ${REMOTE_CONF} <<- EOM
 Locale=
 [EC]
@@ -348,12 +352,16 @@ AllowGuest=0
 AdminPassword=${AMULE_WEBUI_ENCODED_PWD}
 GuestPassword=
 EOM
-    printf "%s successfullly generated.\n" "${REMOTE_CONF}"
+    printf "[INIT-AMULE-CONFIG] %s successfullly generated.\n" "${REMOTE_CONF}"
 else
-    printf "%s file found. Using existing configuration.\n" "${REMOTE_CONF}"
+    printf "[INIT-AMULE-CONFIG] %s file found. Using existing configuration.\n" "${REMOTE_CONF}"
 fi
 
-# Replace passwords
+# Ensure External Connections and WebServer are enabled in aMule configuration file
+sed -i "s/^AcceptExternalConnections=.*/AcceptExternalConnections=1/" "${AMULE_CONF}"
+sed -i "s/^Enabled=.*/Enabled=1/" "${AMULE_CONF}"
+
+# Replace passwords in aMule configuration files
 if [ -n "${GUI_PWD}" ]; then
     sed -i "s/^ECPassword=.*/ECPassword=${AMULE_GUI_ENCODED_PWD}/" "${AMULE_CONF}"
     sed -i "s/^Password=.*/Password=${AMULE_GUI_ENCODED_PWD}/" "${REMOTE_CONF}"
@@ -363,7 +371,7 @@ if [ -n "${WEBUI_PWD}" ]; then
     sed -i "s/^AdminPassword=.*/AdminPassword=${AMULE_WEBUI_ENCODED_PWD}/" "${REMOTE_CONF}"
 fi
 
-# Set permissions
+# Fix aMule files/folders ownership
 chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_INCOMING}"
 chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_TEMP}"
 chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_HOME}"
@@ -372,17 +380,6 @@ chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_HOME}"
 mod_auto_restart
 mod_fix_kad_graph
 mod_fix_kad_bootstrap
+mod_auto_share
 
-# Start aMule
-while true; do
-    mod_auto_share
-    su "${AMULE_USER}" -s "/bin/sh" -c "amuled -c ${AMULE_HOME} -o"
-    EXIT_CODE=$?
-    if [ $EXIT_CODE -eq 0 ]; then
-        printf "[MOD_AUTO_RESTART] Restarting aMule...\n"
-    else
-        printf "aMule exited with exit code: %d\n" "$EXIT_CODE"
-        break
-    fi
-done
-exit "$EXIT_CODE"
+printf "[INIT-AMULE-CONFIG] aMule config initialization ended.\n"
