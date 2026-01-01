@@ -15,6 +15,8 @@ services:
       - MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies
       - MOD_FIX_KAD_GRAPH_ENABLED=true
       - MOD_FIX_KAD_BOOTSTRAP_ENABLED=true
+      - DISABLE_INCOMING_CHOWN=false
+      - DISABLE_TEMP_CHOWN=false
     ports:
       - "4711:4711" # web ui
       - "4712:4712" # remote gui, webserver, cmd ...
