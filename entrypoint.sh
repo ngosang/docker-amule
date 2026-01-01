@@ -364,8 +364,12 @@ if [ -n "${WEBUI_PWD}" ]; then
 fi
 
 # Set permissions
-chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_INCOMING}"
-chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_TEMP}"
+if [ "${DISABLE_INCOMING_CHOWN:-false}" == "false" ]; then
+    chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_INCOMING}"
+fi
+if [ "${DISABLE_TEMP_CHOWN:-false}" == "false" ]; then
+    chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_TEMP}"
+fi
 chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_HOME}"
 
 # Modifications / Fixes

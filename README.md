@@ -74,6 +74,8 @@ services:
       - MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies
       - MOD_FIX_KAD_GRAPH_ENABLED=true
       - MOD_FIX_KAD_BOOTSTRAP_ENABLED=true
+      - DISABLE_INCOMING_CHOWN=false
+      - DISABLE_TEMP_CHOWN=false
     ports:
       - "4711:4711" # web ui
       - "4712:4712" # remote gui, webserver, cmd ...
@@ -108,6 +110,8 @@ docker run -d \
   -e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies `#optional` \
   -e MOD_FIX_KAD_GRAPH_ENABLED=true `#optional` \
   -e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true `#optional` \
+  -e DISABLE_INCOMING_CHOWN=false `#optional` \
+  -e DISABLE_TEMP_CHOWN=false `#optional` \
   -v <fill_amule_configuration_path>:/home/amule/.aMule \
   -v <fill_amule_completed_downloads_path>:/incoming \
   -v <fill_amule_incomplete_downloads_path>:/temp \
@@ -137,6 +141,8 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` | aMule auto share directories with subdirectories. Check modifications section. |
 | `-e MOD_FIX_KAD_GRAPH_ENABLED=true` | Fix Kad stats graph bug. Check modifications section. |
 | `-e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true` | Fix Kad bootstrap bug. Check modifications section. |
+| `-e DISABLE_INCOMING_CHOWN=false` | Disable the /incoming folder chown at boot. Useful when the ownership cannot be changed. |
+| `-e DISABLE_TEMP_CHOWN=false` | Disable the /temp folder chown at boot. Useful when the ownership cannot be changed. |
 | `-v /home/amule/.aMule` | Path to save aMule configuration. |
 | `-v /incoming` | Path to completed torrents. |
 | `-v /temp` | Path to incomplete torrents. |
