@@ -1,13 +1,35 @@
-name: release-docker
+name: release-develop
 
 on:
-  push:
-    tags:
-      - '*.*.*'
+  schedule:
+    # Weekly on Mondays at 2:00 AM UTC
+    - cron: '0 2 * * 1'
   workflow_dispatch:
 
 jobs:
+  get-amule-commit:
+    runs-on: ubuntu-24.04
+    outputs:
+      amule_commit: ${{ steps.get_commit.outputs.amule_commit }}
+      amule_commit_short: ${{ steps.get_commit.outputs.amule_commit_short }}
+      date_tag: ${{ steps.get_commit.outputs.date_tag }}
+    steps:
+      -
+        name: Get latest aMule commit
+        id: get_commit
+        run: |
+          AMULE_COMMIT=$(git ls-remote https://github.com/amule-project/amule.git refs/heads/master | cut -f1)
+          AMULE_COMMIT_SHORT=${AMULE_COMMIT:0:7}
+          DATE_TAG=$(date -u +%Y%m%d)
+          echo "amule_commit=${AMULE_COMMIT}"
+          echo "amule_commit_short=${AMULE_COMMIT_SHORT}"
+          echo "date_tag=${DATE_TAG}"
+          echo "amule_commit=${AMULE_COMMIT}" >> $GITHUB_OUTPUT
+          echo "amule_commit_short=${AMULE_COMMIT_SHORT}" >> $GITHUB_OUTPUT
+          echo "date_tag=${DATE_TAG}" >> $GITHUB_OUTPUT
+
   build-docker-images:
+    needs: get-amule-commit
     name: build-docker-images (${{ matrix.arch }})
     runs-on: ubuntu-24.04
     strategy:
@@ -35,14 +57,9 @@ jobs:
         name: Set repo
         run: echo REPOSITORY=ngosang/amule >> $GITHUB_ENV
       -
-        name: Set release tag
-        run: echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-      -
-        name: Docker metadata
-        id: docker_metadata
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REPOSITORY }},ghcr.io/${{ env.REPOSITORY }}
+        name: Set develop tag
+        run: |
+          echo "DEVELOP_TAG=develop-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}" >> $GITHUB_ENV
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -67,25 +84,29 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.develop
           platforms: ${{ matrix.platform }}
           push: ${{ github.event_name != 'pull_request' }}
-          # Append arch suffix so each matrix job pushes unique tag
-          # Do not include :latest here
+          build-args: |
+            AMULE_COMMIT=${{ needs.get-amule-commit.outputs.amule_commit }}
           tags: |
-            ${{ env.REPOSITORY }}:${{ env.RELEASE_TAG }}-${{ matrix.arch }}
-            ghcr.io/${{ env.REPOSITORY }}:${{ env.RELEASE_TAG }}-${{ matrix.arch }}
+            ${{ env.REPOSITORY }}:${{ env.DEVELOP_TAG }}-${{ matrix.arch }}
+            ghcr.io/${{ env.REPOSITORY }}:${{ env.DEVELOP_TAG }}-${{ matrix.arch }}
           labels: |
-            org.opencontainers.image.version=${{ env.RELEASE_TAG }}
+            org.opencontainers.image.version=${{ env.DEVELOP_TAG }}
 
   create-manifest:
-    needs: build-docker-images
+    needs: [get-amule-commit, build-docker-images]
     runs-on: ubuntu-24.04
     if: ${{ github.event_name != 'pull_request' }}
     steps:
       -
         name: Set repo
         run: echo REPOSITORY=ngosang/amule >> $GITHUB_ENV
+      -
+        name: Set develop tag
+        run: |
+          echo "DEVELOP_TAG=develop-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}" >> $GITHUB_ENV
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -105,7 +126,7 @@ jobs:
       -
         name: Create multi-arch manifest on DockerHub
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
+          TAG=${{ env.DEVELOP_TAG }}
           REPO=${REPOSITORY}
           ARCHS=(amd64 armv6 armv7 arm64v8 ppc64le riscv64 s390x)
           images=()
@@ -114,12 +135,12 @@ jobs:
           done
           echo "Creating multi-arch manifest: ${REPO}:${TAG}"
           docker buildx imagetools create --tag ${REPO}:${TAG} "${images[@]}"
-          echo "Creating multi-arch manifest: ${REPO}:latest"
-          docker buildx imagetools create --tag ${REPO}:latest "${images[@]}"
+          echo "Creating multi-arch manifest: ${REPO}:develop"
+          docker buildx imagetools create --tag ${REPO}:develop "${images[@]}"
       -
         name: Create multi-arch manifest on GHCR
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
+          TAG=${{ env.DEVELOP_TAG }}
           REPO=ghcr.io/${REPOSITORY}
           ARCHS=(amd64 armv6 armv7 arm64v8 ppc64le riscv64 s390x)
           images=()
@@ -128,5 +149,5 @@ jobs:
           done
           echo "Creating multi-arch manifest: ${REPO}:${TAG}"
           docker buildx imagetools create --tag ${REPO}:${TAG} "${images[@]}"
-          echo "Creating multi-arch manifest: ${REPO}:latest"
-          docker buildx imagetools create --tag ${REPO}:latest "${images[@]}"
+          echo "Creating multi-arch manifest: ${REPO}:develop"
+          docker buildx imagetools create --tag ${REPO}:develop "${images[@]}"

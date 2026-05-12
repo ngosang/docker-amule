@@ -3,7 +3,7 @@ FROM alpine:3.23 AS builder
 WORKDIR /tmp
 
 # Build aMule from source
-ENV AMULE_COMMIT=abfcbb8ad375435fcb8291f0b3973d653def478b
+ARG AMULE_COMMIT=abfcbb8ad375435fcb8291f0b3973d653def478b
 RUN apk add --no-cache \
         gcc g++ cmake make git \
         boost-dev crypto++-dev libmaxminddb-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev && \
