@@ -70,6 +70,8 @@ jobs:
           file: ./Dockerfile
           platforms: ${{ matrix.platform }}
           push: ${{ github.event_name != 'pull_request' }}
+          provenance: false
+          sbom: false
           # Append arch suffix so each matrix job pushes unique tag
           # Do not include :latest here
           tags: |
@@ -130,3 +132,40 @@ jobs:
           docker buildx imagetools create --tag ${REPO}:${TAG} "${images[@]}"
           echo "Creating multi-arch manifest: ${REPO}:latest"
           docker buildx imagetools create --tag ${REPO}:latest "${images[@]}"
+      -
+        name: Delete individual arch tags on DockerHub
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          ARCHS=(amd64 armv6 armv7 arm64v8 ppc64le riscv64 s390x)
+          DOCKER_JWT=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"username\":\"${DOCKERHUB_USERNAME}\",\"password\":\"${DOCKERHUB_TOKEN}\"}" \
+            https://hub.docker.com/v2/users/login | jq -r '.token')
+          for ARCH in "${ARCHS[@]}"; do
+            echo "Deleting DockerHub tag: ${REPOSITORY}:${TAG}-${ARCH}"
+            curl -s -X DELETE \
+              -H "Authorization: Bearer ${DOCKER_JWT}" \
+              "https://hub.docker.com/v2/repositories/${REPOSITORY}/tags/${TAG}-${ARCH}/"
+          done
+      -
+        name: Delete individual arch tags on GitHub Container Registry
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          PACKAGE=$(basename ${REPOSITORY})
+          ARCHS=(amd64 armv6 armv7 arm64v8 ppc64le riscv64 s390x)
+          for ARCH in "${ARCHS[@]}"; do
+            ARCH_TAG="${TAG}-${ARCH}"
+            echo "Deleting GHCR tag: ghcr.io/${REPOSITORY}:${ARCH_TAG}"
+            VERSION_ID=$(gh api "/user/packages/container/${PACKAGE}/versions" --paginate \
+              | jq -r ".[] | select(.metadata.container.tags[] == \"${ARCH_TAG}\") | .id")
+            if [ -n "${VERSION_ID}" ]; then
+              gh api --method DELETE "/user/packages/container/${PACKAGE}/versions/${VERSION_ID}"
+            else
+              echo "Version not found for tag ${ARCH_TAG}, skipping"
+            fi
+          done
