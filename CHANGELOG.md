@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.3-21 (2026/05/12)
+
+* Build aMule from source code
+* Update AmuleWebUI-Reloaded theme
+* Update GitHub actions
+* Remove package.json file and use VERSION file instead
+* Update base Docker image to Alpine Linux 3.23
+
 ## 2.3.3-20 (2025/10/29)
 
 * Update AmuleWebUI-Reloaded theme (fixes udp_port and reconn_en options)
