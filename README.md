@@ -13,17 +13,27 @@
 
 Inspired by [tchabaud](https://github.com/tchabaud/dockerfiles/tree/master/amule) and [synopsis8](https://github.com/synopsis8/dockerfiles/tree/master/amule) work.
 
-## Docker Registry
+## Docker Images
 
-Docker images are available in [GHCR](https://github.com/users/ngosang/packages/container/package/amule) and [DockerHub](https://hub.docker.com/r/ngosang/amule).
+Docker images are available in [DockerHub](https://hub.docker.com/r/ngosang/amule) and [GHCR](https://github.com/users/ngosang/packages/container/package/amule).
 
 ```bash
-docker pull ghcr.io/ngosang/amule
-or
 docker pull ngosang/amule
+# or
+docker pull ghcr.io/ngosang/amule
 ```
 
-## Supported Architectures
+### Docker Tags
+
+Stable:
+* `latest` — Latest stable release.
+* `2.3.3-21` — Specific stable version.
+
+Development:
+* `develop` — Latest development build (compiled from aMule master branch).
+* `develop-20260512-abc1234` — Specific development build: date + aMule upstream commit.
+
+### Supported Architectures
 
 The architectures supported by this image are:
 
