@@ -32,18 +32,6 @@ jobs:
         name: Checkout
         uses: actions/checkout@v6
       -
-        name: Set repo
-        run: echo REPOSITORY=ngosang/amule >> $GITHUB_ENV
-      -
-        name: Set release tag
-        run: echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-      -
-        name: Docker metadata
-        id: docker_metadata
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REPOSITORY }},ghcr.io/${{ env.REPOSITORY }}
-      -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       -
@@ -63,31 +51,46 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GH_PAT }}
       -
-        name: Build and push
+        name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           platforms: ${{ matrix.platform }}
-          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
-          # Append arch suffix so each matrix job pushes unique tag
-          # Do not include :latest here
-          tags: |
-            ${{ env.REPOSITORY }}:${{ env.RELEASE_TAG }}-${{ matrix.arch }}
-            ghcr.io/${{ env.REPOSITORY }}:${{ env.RELEASE_TAG }}-${{ matrix.arch }}
+          outputs: |
+            type=image,name=ngosang/amule,push-by-digest=true,name-canonical=true,push=true
+            type=image,name=ghcr.io/ngosang/amule,push-by-digest=true,name-canonical=true,push=true
           labels: |
-            org.opencontainers.image.version=${{ env.RELEASE_TAG }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+      -
+        name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      -
+        name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
 
   create-manifest:
     needs: build-docker-images
     runs-on: ubuntu-24.04
-    if: ${{ github.event_name != 'pull_request' }}
     steps:
       -
-        name: Set repo
-        run: echo REPOSITORY=ngosang/amule >> $GITHUB_ENV
+        name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -106,66 +109,21 @@ jobs:
           password: ${{ secrets.GH_PAT }}
       -
         name: Create multi-arch manifest on DockerHub
+        working-directory: /tmp/digests
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          REPO=${REPOSITORY}
-          ARCHS=(amd64 armv6 armv7 arm64v8 ppc64le riscv64 s390x)
-          images=()
-          for a in "${ARCHS[@]}"; do
-            images+=("${REPO}:${TAG}-${a}")
-          done
-          echo "Creating multi-arch manifest: ${REPO}:${TAG}"
-          docker buildx imagetools create --tag ${REPO}:${TAG} "${images[@]}"
-          echo "Creating multi-arch manifest: ${REPO}:latest"
-          docker buildx imagetools create --tag ${REPO}:latest "${images[@]}"
+          TAG=${{ github.ref_name }}
+          REPO=ngosang/amule
+          docker buildx imagetools create \
+            --tag ${REPO}:${TAG} \
+            --tag ${REPO}:latest \
+            $(printf "${REPO}@sha256:%s " *)
       -
         name: Create multi-arch manifest on GHCR
+        working-directory: /tmp/digests
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          REPO=ghcr.io/${REPOSITORY}
-          ARCHS=(amd64 armv6 armv7 arm64v8 ppc64le riscv64 s390x)
-          images=()
-          for a in "${ARCHS[@]}"; do
-            images+=("${REPO}:${TAG}-${a}")
-          done
-          echo "Creating multi-arch manifest: ${REPO}:${TAG}"
-          docker buildx imagetools create --tag ${REPO}:${TAG} "${images[@]}"
-          echo "Creating multi-arch manifest: ${REPO}:latest"
-          docker buildx imagetools create --tag ${REPO}:latest "${images[@]}"
-      -
-        name: Delete individual arch tags on DockerHub
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          ARCHS=(amd64 armv6 armv7 arm64v8 ppc64le riscv64 s390x)
-          DOCKER_JWT=$(curl -s -X POST \
-            -H "Content-Type: application/json" \
-            -d "{\"username\":\"${DOCKERHUB_USERNAME}\",\"password\":\"${DOCKERHUB_TOKEN}\"}" \
-            https://hub.docker.com/v2/users/login | jq -r '.token')
-          for ARCH in "${ARCHS[@]}"; do
-            echo "Deleting DockerHub tag: ${REPOSITORY}:${TAG}-${ARCH}"
-            curl -s -X DELETE \
-              -H "Authorization: Bearer ${DOCKER_JWT}" \
-              "https://hub.docker.com/v2/repositories/${REPOSITORY}/tags/${TAG}-${ARCH}/"
-          done
-      -
-        name: Delete individual arch tags on GitHub Container Registry
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          PACKAGE=$(basename ${REPOSITORY})
-          ARCHS=(amd64 armv6 armv7 arm64v8 ppc64le riscv64 s390x)
-          for ARCH in "${ARCHS[@]}"; do
-            ARCH_TAG="${TAG}-${ARCH}"
-            echo "Deleting GHCR tag: ghcr.io/${REPOSITORY}:${ARCH_TAG}"
-            VERSION_ID=$(gh api "/user/packages/container/${PACKAGE}/versions" --paginate \
-              | jq -r ".[] | select(.metadata.container.tags[] == \"${ARCH_TAG}\") | .id")
-            if [ -n "${VERSION_ID}" ]; then
-              gh api --method DELETE "/user/packages/container/${PACKAGE}/versions/${VERSION_ID}"
-            else
-              echo "Version not found for tag ${ARCH_TAG}, skipping"
-            fi
-          done
+          TAG=${{ github.ref_name }}
+          REPO=ghcr.io/ngosang/amule
+          docker buildx imagetools create \
+            --tag ${REPO}:${TAG} \
+            --tag ${REPO}:latest \
+            $(printf "${REPO}@sha256:%s " *)
