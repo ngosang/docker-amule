@@ -1,0 +1,123 @@
+FROM public.ecr.aws/ubuntu/ubuntu:24.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /tmp
+
+# Install build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates pkg-config \
+        build-essential cmake make git \
+        libboost-all-dev libcrypto++-dev libglib2.0-dev libmaxminddb-dev libupnp-dev libreadline-dev libwxgtk3.2-dev zlib1g-dev libpng-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build aMule from source
+ARG AMULE_COMMIT=a5fb7797d4c4cfb42a60d24588e20d32e637fb30
+RUN git clone https://github.com/amule-project/amule.git amule-src && \
+    git -C amule-src checkout ${AMULE_COMMIT} && \
+    cmake -B amule-build amule-src \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DBUILD_MONOLITHIC=NO \
+        -DBUILD_DAEMON=YES \
+        -DBUILD_AMULECMD=YES \
+        -DBUILD_WEBSERVER=YES \
+        -DBUILD_ALCC=YES \
+        -DENABLE_IP2COUNTRY=YES \
+        -DENABLE_UPNP=YES \
+        -DENABLE_NLS=NO && \
+    cmake --build amule-build -j"$(nproc)" && \
+    cmake --install amule-build && \
+    gzip /usr/share/man/man1/alcc.1 /usr/share/man/man1/amulecmd.1 /usr/share/man/man1/amuled.1 \
+        /usr/share/man/man1/amuleweb.1 /usr/share/man/man1/ed2k.1 && \
+    rm -rf /tmp/*
+
+# Download alternative Web UI
+ENV AMULEWEBUI_RELOADED_COMMIT=3fef80d724b71366667d7ae9de5809b878b98f75
+RUN cd /usr/share/amule/webserver && \
+    git clone https://github.com/MatteoRagni/AmuleWebUI-Reloaded.git AmuleWebUI-Reloaded && \
+    git -C AmuleWebUI-Reloaded checkout ${AMULEWEBUI_RELOADED_COMMIT} && \
+    rm -rf AmuleWebUI-Reloaded/.git AmuleWebUI-Reloaded/doc-images AmuleWebUI-Reloaded/LICENSE AmuleWebUI-Reloaded/README.md
+
+# Build heaptrack from source
+ARG HEAPTRACK_VERSION=v1.5.0
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libunwind-dev libdw-dev libzstd-dev \
+    && rm -rf /var/lib/apt/lists/* && \
+    git clone --depth=1 --branch ${HEAPTRACK_VERSION} https://github.com/KDE/heaptrack.git heaptrack-src && \
+    sed -i '/#include <vector>/a #include <cstdint>' heaptrack-src/src/analyze/suppressions.h && \
+    cmake -B heaptrack-build heaptrack-src \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DHEAPTRACK_BUILD_GUI=OFF && \
+    cmake --build heaptrack-build -j"$(nproc)" && \
+    cmake --install heaptrack-build && \
+    rm -rf /tmp/*
+
+FROM public.ecr.aws/ubuntu/ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+LABEL maintainer="ngosang@hotmail.es"
+
+# Copy binaries, Web UI and man docs
+COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
+COPY --from=builder /usr/share/amule /usr/share/amule
+COPY --from=builder /usr/share/man/man1/alcc.1.gz /usr/share/man/man1/amulecmd.1.gz \
+    /usr/share/man/man1/amuled.1.gz /usr/share/man/man1/amuleweb.1.gz /usr/share/man/man1/ed2k.1.gz \
+    /usr/share/man/man1/
+
+# Copy heaptrack binaries and libraries
+COPY --from=builder /usr/bin/heaptrack /usr/bin/heaptrack_print /usr/bin/
+COPY --from=builder /usr/lib/heaptrack /usr/lib/heaptrack
+
+# Install runtime dependencies and debug tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libcrypto++8t64 libreadline8t64 libgcc-s1 libstdc++6 libmaxminddb0 libupnp17 libpng16-16t64 libwxgtk3.2-1t64 \
+        tzdata pwgen curl man-db \
+        s6 execline gosu \
+        gdb strace lsof libunwind8 libelf1t64 libzstd1 \
+        libboost-iostreams1.83.0 libboost-program-options1.83.0 libboost-filesystem1.83.0 \
+        busybox-static \
+    && rm -rf /var/lib/apt/lists/* /usr/share/locale && \
+    # su-exec compatibility shim (gosu has the same interface)
+    ln -s /usr/sbin/gosu /usr/local/bin/su-exec && \
+    # crond compatibility shim: wrap busybox crond forcing Alpine crontabs path
+    printf '#!/bin/sh\nexec /bin/busybox crond -c /etc/crontabs "$@"\n' > /usr/local/sbin/crond && \
+    chmod +x /usr/local/sbin/crond && \
+    # busybox crond expects /etc/crontabs/ (Alpine path)
+    mkdir -p /etc/crontabs && touch /etc/crontabs/root && \
+    # addgroup compatibility shim (Alpine busybox syntax: addgroup NAME -g GID)
+    printf '#!/bin/sh\nGID=""; GROUP=""\nwhile [ $# -gt 0 ]; do\n  case "$1" in\n    -g) GID="$2"; shift 2 ;;\n    -S) shift ;;\n    *) GROUP="$1"; shift ;;\n  esac\ndone\nexec groupadd ${GID:+-g "$GID"} "$GROUP"\n' > /usr/local/sbin/addgroup && \
+    chmod +x /usr/local/sbin/addgroup && \
+    # adduser compatibility shim (Alpine busybox syntax)
+    printf '#!/bin/sh\nUSER_NAME=""; UID_V=""; GROUP=""; SHELL_V=""; HOME_V=""; GECOS=""\nwhile [ $# -gt 0 ]; do\n  case "$1" in\n    -u) UID_V="$2"; shift 2 ;;\n    -G) GROUP="$2"; shift 2 ;;\n    -s) SHELL_V="$2"; shift 2 ;;\n    -h) HOME_V="$2"; shift 2 ;;\n    -g) GECOS="$2"; shift 2 ;;\n    -H|-D|-S) shift ;;\n    *) USER_NAME="$1"; shift ;;\n  esac\ndone\nexec useradd ${UID_V:+-u "$UID_V"} ${GROUP:+-g "$GROUP"} ${SHELL_V:+-s "$SHELL_V"} ${HOME_V:+-d "$HOME_V"} ${GECOS:+-c "$GECOS"} -M -N "$USER_NAME"\n' > /usr/local/sbin/adduser && \
+    chmod +x /usr/local/sbin/adduser && \
+    # Check binaries are OK
+    ldd /usr/bin/alcc > /dev/null && \
+    ldd /usr/bin/amulecmd > /dev/null && \
+    ldd /usr/bin/amuled > /dev/null && \
+    ldd /usr/bin/amuleweb > /dev/null && \
+    ldd /usr/bin/ed2k > /dev/null && \
+    # Check man documentation is OK
+    man alcc > /dev/null && \
+    man amulecmd > /dev/null && \
+    man amuled > /dev/null && \
+    man amuleweb > /dev/null && \
+    man ed2k > /dev/null
+
+# Add entrypoint and S6 services
+COPY --chmod=755 docker/entrypoint.sh docker/amule-config.sh docker/amule-mods.sh /home/amule/
+COPY --chmod=755 docker/services.d/ /etc/services.d/
+
+WORKDIR /home/amule
+
+EXPOSE 4711/tcp 4712/tcp 4662/tcp 4665/udp 4672/udp
+
+ENTRYPOINT ["/home/amule/entrypoint.sh"]
+
+# HELP
+#
+# => Build Docker image
+# docker build -f Dockerfile.debug2 -t ngosang/amule:debug --progress=plain .

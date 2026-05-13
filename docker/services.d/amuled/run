@@ -1,4 +1,29 @@
 #!/bin/sh
 
 printf "[SUPERVISOR] Starting amuled service ...\n"
+
 exec su-exec "${AMULE_USER}" amuled -c "${AMULE_HOME}" -o
+
+# gdb -batch invocation:
+#   --return-child-result: gdb's exit code mirrors amuled's, so the
+#       loop below correctly distinguishes crash from clean exit.
+#   set disable-randomization off: containers without CAP_SYS_ADMIN
+#       can't toggle ASLR; tell gdb not to try (silences a warning).
+#   handle SIGPIPE: amuled hits this routinely on broken peer sockets.
+#   thread-events: suppress thread create/destroy chatter.
+#   `thread apply all bt full` runs unconditionally — if amuled
+#   exited cleanly there's nothing meaningful to backtrace and gdb
+#   says so. (gdb's `if ... end` blocks aren't valid at top level,
+#   so a conditional version errors at parse time even though gdb
+#   tolerates it and runs the inner commands anyway.)
+# exec su-exec "${AMULE_USER}" gdb -batch --return-child-result \
+#     -ex 'set disable-randomization off' \
+#     -ex 'set pagination off' \
+#     -ex 'set print thread-events off' \
+#     -ex 'handle SIGPIPE nostop noprint pass' \
+#     -ex 'run' \
+#     -ex 'echo \n=== POST-RUN STATE — backtrace of all threads ===\n' \
+#     -ex 'thread apply all bt full' \
+#     -ex 'echo \n=== END BACKTRACE ===\n' \
+#     -ex 'quit' \
+#     --args amuled -c "${AMULE_HOME}" -o
