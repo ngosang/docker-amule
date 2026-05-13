@@ -1,0 +1,104 @@
+FROM alpine:3.23 AS builder
+
+WORKDIR /tmp
+
+# Install build tools
+RUN apk add --no-cache \
+        gcc g++ cmake make git \
+        boost-dev crypto++-dev libmaxminddb-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev
+
+# Build aMule from source
+ARG AMULE_COMMIT=abfcbb8ad375435fcb8291f0b3973d653def478b
+RUN git clone https://github.com/amule-project/amule.git amule-src && \
+    git -C amule-src checkout ${AMULE_COMMIT} && \
+    cmake -B amule-build amule-src \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DBUILD_MONOLITHIC=NO \
+        -DBUILD_DAEMON=YES \
+        -DBUILD_AMULECMD=YES \
+        -DBUILD_WEBSERVER=YES \
+        -DBUILD_ALCC=YES \
+        -DENABLE_IP2COUNTRY=YES \
+        -DENABLE_UPNP=YES \
+        -DENABLE_NLS=NO && \
+    cmake --build amule-build -j"$(nproc)" && \
+    cmake --install amule-build && \
+    gzip /usr/share/man/man1/alcc.1 /usr/share/man/man1/amulecmd.1 /usr/share/man/man1/amuled.1 \
+        /usr/share/man/man1/amuleweb.1 /usr/share/man/man1/ed2k.1 && \
+    rm -rf /tmp/*
+
+# Download alternative Web UI
+ENV AMULEWEBUI_RELOADED_COMMIT=3fef80d724b71366667d7ae9de5809b878b98f75
+RUN cd /usr/share/amule/webserver && \
+    git clone https://github.com/MatteoRagni/AmuleWebUI-Reloaded.git AmuleWebUI-Reloaded && \
+    git -C AmuleWebUI-Reloaded checkout ${AMULEWEBUI_RELOADED_COMMIT} && \
+    rm -rf AmuleWebUI-Reloaded/.git AmuleWebUI-Reloaded/doc-images AmuleWebUI-Reloaded/LICENSE AmuleWebUI-Reloaded/README.md
+
+# Build heaptrack from source (not available as Alpine package)
+ARG HEAPTRACK_VERSION=v1.5.0
+RUN apk add --no-cache libunwind-dev elfutils-dev zstd-dev && \
+    git clone --depth=1 --branch ${HEAPTRACK_VERSION} https://github.com/KDE/heaptrack.git heaptrack-src && \
+    sed -i '/LIBUNWIND_HAS_UNW_BACKTRACE/d' heaptrack-src/cmake/FindLibunwind.cmake && \
+    sed -i '/#include <vector>/a #include <cstdint>' heaptrack-src/src/analyze/suppressions.h && \
+    cmake -B heaptrack-build heaptrack-src \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DHEAPTRACK_BUILD_GUI=OFF && \
+    cmake --build heaptrack-build -j"$(nproc)" && \
+    cmake --install heaptrack-build && \
+    rm -rf /tmp/*
+
+FROM alpine:3.23
+
+LABEL maintainer="ngosang@hotmail.es"
+
+# Copy binaries, Web UI and man docs
+COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
+COPY --from=builder /usr/share/amule /usr/share/amule
+COPY --from=builder /usr/share/man/man1/alcc.1.gz /usr/share/man/man1/amulecmd.1.gz \
+    /usr/share/man/man1/amuled.1.gz /usr/share/man/man1/amuleweb.1.gz /usr/share/man/man1/ed2k.1.gz \
+    /usr/share/man/man1/
+
+# Copy heaptrack binaries and libraries
+COPY --from=builder /usr/bin/heaptrack /usr/bin/heaptrack_print /usr/bin/
+COPY --from=builder /usr/lib/heaptrack /usr/lib/heaptrack
+
+# Install runtime dependencies and debug tools, remove unnecessary locale files
+RUN apk add --no-cache \
+        crypto++ readline libgcc libstdc++ libmaxminddb libupnp libpng wxwidgets tzdata pwgen curl mandoc \
+        s6 execline su-exec \
+        gdb strace lsof libunwind libelf zstd-libs boost1.84-iostreams boost1.84-program_options boost1.84-filesystem && \
+    rm -rf /usr/share/locale && \
+    # Check binaries are OK
+    ldd /usr/bin/alcc > /dev/null && \
+    ldd /usr/bin/amulecmd > /dev/null && \
+    ldd /usr/bin/amuled > /dev/null && \
+    ldd /usr/bin/amuleweb > /dev/null && \
+    ldd /usr/bin/ed2k > /dev/null && \
+    # Check man documentation is OK
+    man alcc > /dev/null && \
+    man amulecmd > /dev/null && \
+    man amuled > /dev/null && \
+    man amuleweb > /dev/null && \
+    man ed2k > /dev/null
+
+# Add entrypoint and S6 services
+COPY --chmod=755 docker/entrypoint.sh docker/amule-config.sh docker/amule-mods.sh /home/amule/
+COPY --chmod=755 docker/services.d/ /etc/services.d/
+
+WORKDIR /home/amule
+
+EXPOSE 4711/tcp 4712/tcp 4662/tcp 4665/udp 4672/udp
+
+ENTRYPOINT ["/home/amule/entrypoint.sh"]
+
+# HELP
+#
+# => Build Docker image
+# docker build -f Dockerfile.debug -t ngosang/amule:debug --progress=plain .
+#
+# => Build multi-arch Docker image
+# docker buildx create --use
+# docker buildx build -f Dockerfile.debug -t ngosang/amule:debug --progress=plain --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/riscv64,linux/s390x .
