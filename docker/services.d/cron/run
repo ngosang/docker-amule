@@ -1,0 +1,2 @@
+#!/bin/sh
+exec crond -l 8 -f

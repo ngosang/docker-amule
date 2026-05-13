@@ -2,12 +2,14 @@ FROM alpine:3.23 AS builder
 
 WORKDIR /tmp
 
-# Build aMule from source
-ARG AMULE_COMMIT=abfcbb8ad375435fcb8291f0b3973d653def478b
+# Install build tools
 RUN apk add --no-cache \
         gcc g++ cmake make git \
-        boost-dev crypto++-dev libmaxminddb-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev && \
-    git clone https://github.com/amule-project/amule.git amule-src && \
+        boost-dev crypto++-dev libmaxminddb-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev
+
+# Build aMule from source
+ARG AMULE_COMMIT=abfcbb8ad375435fcb8291f0b3973d653def478b
+RUN git clone https://github.com/amule-project/amule.git amule-src && \
     git -C amule-src checkout ${AMULE_COMMIT} && \
     cmake -B amule-build amule-src \
         -DCMAKE_INSTALL_PREFIX=/usr \
@@ -27,7 +29,7 @@ RUN apk add --no-cache \
         /usr/share/man/man1/amuleweb.1 /usr/share/man/man1/ed2k.1 && \
     rm -rf /tmp/*
 
-# Download a modern Web UI
+# Download alternative Web UI
 ENV AMULEWEBUI_RELOADED_COMMIT=3fef80d724b71366667d7ae9de5809b878b98f75
 RUN cd /usr/share/amule/webserver && \
     git clone https://github.com/MatteoRagni/AmuleWebUI-Reloaded.git AmuleWebUI-Reloaded && \
@@ -38,20 +40,17 @@ FROM alpine:3.23
 
 LABEL maintainer="ngosang@hotmail.es"
 
-# Copy binaries
+# Copy binaries, Web UI and man docs
 COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
-
-# Copy aMule shared data and Web UI
 COPY --from=builder /usr/share/amule /usr/share/amule
-
-# Copy man docs
 COPY --from=builder /usr/share/man/man1/alcc.1.gz /usr/share/man/man1/amulecmd.1.gz \
     /usr/share/man/man1/amuled.1.gz /usr/share/man/man1/amuleweb.1.gz /usr/share/man/man1/ed2k.1.gz \
     /usr/share/man/man1/
 
 # Install runtime dependencies and remove unnecessary locale files
 RUN apk add --no-cache \
-        crypto++ readline libgcc libstdc++ libmaxminddb libupnp libpng wxwidgets tzdata pwgen curl mandoc && \
+        crypto++ readline libgcc libstdc++ libmaxminddb libupnp libpng wxwidgets tzdata pwgen curl mandoc \
+        s6 execline su-exec && \
     rm -rf /usr/share/locale && \
     # Check binaries are OK
     ldd /usr/bin/alcc > /dev/null && \
@@ -66,8 +65,9 @@ RUN apk add --no-cache \
     man amuleweb > /dev/null && \
     man ed2k > /dev/null
 
-# Add entrypoint
-COPY entrypoint.sh /home/amule/entrypoint.sh
+# Add entrypoint and S6 services
+COPY --chmod=755 docker/entrypoint.sh docker/amule-config.sh docker/amule-mods.sh /home/amule/
+COPY --chmod=755 docker/services.d/ /etc/services.d/
 
 WORKDIR /home/amule
 
@@ -82,4 +82,4 @@ ENTRYPOINT ["/home/amule/entrypoint.sh"]
 #
 # => Build multi-arch Docker image
 # docker buildx create --use
-# docker buildx build -f Dockerfile.develop -t ngosang/amule:test --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/riscv64,linux/s390x .
+# docker buildx build -f Dockerfile.develop -t ngosang/amule:test --progress=plain --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/riscv64,linux/s390x .

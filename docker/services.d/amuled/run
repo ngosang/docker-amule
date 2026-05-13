@@ -1,0 +1,2 @@
+#!/bin/sh
+exec su-exec "${AMULE_USER}" amuled -c "${AMULE_HOME}" -o

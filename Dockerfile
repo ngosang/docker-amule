@@ -2,12 +2,14 @@ FROM alpine:3.23 AS builder
 
 WORKDIR /tmp
 
-# Build aMule from source
-ENV AMULE_VERSION=2.3.3
+# Install build tools
 RUN apk add --no-cache \
         gcc g++ make curl git \
-        boost-dev crypto++-dev geoip-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev && \
-    curl -fL "https://downloads.sourceforge.net/project/amule/aMule/${AMULE_VERSION}/aMule-${AMULE_VERSION}.tar.gz" -o amule.tar.gz && \
+        boost-dev crypto++-dev geoip-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev
+
+# Build aMule from source
+ENV AMULE_VERSION=2.3.3
+RUN curl -fL "https://downloads.sourceforge.net/project/amule/aMule/${AMULE_VERSION}/aMule-${AMULE_VERSION}.tar.gz" -o amule.tar.gz && \
     tar -xf amule.tar.gz && \
     sed -i '1s/^/#include <exception>\n/' aMule-${AMULE_VERSION}/src/libs/common/MuleDebug.cpp && \
     cd aMule-${AMULE_VERSION} && \
@@ -36,7 +38,7 @@ RUN apk add --no-cache \
         /usr/share/man/man1/amuleweb.1 /usr/share/man/man1/ed2k.1 && \
     rm -rf /tmp/*
 
-# Download a modern Web UI
+# Download alternative Web UI
 ENV AMULEWEBUI_RELOADED_COMMIT=3fef80d724b71366667d7ae9de5809b878b98f75
 RUN cd /usr/share/amule/webserver && \
     git clone https://github.com/MatteoRagni/AmuleWebUI-Reloaded.git AmuleWebUI-Reloaded && \
@@ -47,19 +49,16 @@ FROM alpine:3.23
 
 LABEL maintainer="ngosang@hotmail.es"
 
-# Copy binaries
+# Copy binaries, Web UI and man docs
 COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
-
-# Copy aMule shared data and Web UI
 COPY --from=builder /usr/share/amule /usr/share/amule
-
-# Copy man docs
 COPY --from=builder /usr/share/man/man1/amulecmd.1.gz /usr/share/man/man1/amuled.1.gz \
     /usr/share/man/man1/amuleweb.1.gz /usr/share/man/man1/ed2k.1.gz /usr/share/man/man1/
 
 # Install runtime dependencies and remove unnecessary locale files
 RUN apk add --no-cache \
-        crypto++ readline libgcc libstdc++ geoip libupnp libpng wxwidgets tzdata pwgen curl mandoc && \
+        crypto++ readline libgcc libstdc++ geoip libupnp libpng wxwidgets tzdata pwgen curl mandoc \
+        s6 execline su-exec && \
     rm -rf /usr/share/locale && \
     # Check binaries are OK
     ldd /usr/bin/alcc > /dev/null && \
@@ -73,8 +72,9 @@ RUN apk add --no-cache \
     man amuleweb > /dev/null && \
     man ed2k > /dev/null
 
-# Add entrypoint
-COPY entrypoint.sh /home/amule/entrypoint.sh
+# Add entrypoint and S6 services
+COPY --chmod=755 docker/entrypoint.sh docker/amule-config.sh docker/amule-mods.sh /home/amule/
+COPY --chmod=755 docker/services.d/ /etc/services.d/
 
 WORKDIR /home/amule
 
