@@ -14,6 +14,9 @@ mod_fix_kad_graph
 mod_fix_kad_bootstrap
 mod_auto_share
 
+# Apply umask before launching supervisor so amuled inherits it
+umask "${UMASK:-0002}"
+
 # Hand off to S6 process supervisor
 # Export dynamic variables so S6 services inherit them
 export AMULE_USER AMULE_HOME AMULE_CONF

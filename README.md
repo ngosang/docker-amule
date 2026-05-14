@@ -138,6 +138,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-p 4672/udp` | ED2K UDP port (must be open to Internet). |
 | `-e PUID=1000` | for UserID - see below for explanation. |
 | `-e PGID=1000` | for GroupID - see below for explanation. |
+| `-e UMASK=0002` | Set the umask for file creation. Optional, defaults to `0002` (files: 664, dirs: 775, group write access). |
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
 | `-e GUI_PWD=<fill_password>` | Set Remote GUI password. It will overwrite the password in the config files. |
 | `-e WEBUI_PWD=<fill_password>` | Set Web UI password. It will overwrite the password in the config files. |
