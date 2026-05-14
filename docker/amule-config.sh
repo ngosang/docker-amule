@@ -195,7 +195,7 @@ IpFilterClients=1
 IpFilterServers=1
 TransmitOnlyUploadingClients=0
 [WebServer]
-Enabled=1
+Enabled=0
 Password=${AMULE_WEBUI_ENCODED_PWD}
 PasswordLow=
 Port=4711
@@ -276,6 +276,9 @@ EOM
 else
     printf "[INIT] File %s found. Using existing configuration.\n" "${REMOTE_CONF}"
 fi
+
+# Ensure WebServer is not started by amuled
+sed -i '/^\[WebServer\]/,/^\[/{s/^Enabled=.*/Enabled=0/}' "${AMULE_CONF}"
 
 # Replace passwords
 if [ -n "${GUI_PWD}" ]; then

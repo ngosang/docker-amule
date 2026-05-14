@@ -1,0 +1,11 @@
+#!/bin/sh
+# $1 = exit code (256 if killed by signal), $2 = signal number when $1=256
+EXIT_CODE=$1
+SIGNAL=$2
+if [ "${EXIT_CODE}" -eq 256 ]; then
+    printf "[SUPERVISOR] Service amuleweb was killed by signal %d.\n" "${SIGNAL}"
+elif [ "${EXIT_CODE}" -ne 0 ]; then
+    printf "[SUPERVISOR] Service amuleweb terminated with exit code: %d.\n" "${EXIT_CODE}"
+else
+    printf "[SUPERVISOR] Service amuleweb exited with code 0.\n"
+fi

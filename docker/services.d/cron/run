@@ -1,2 +1,4 @@
 #!/bin/sh
+
+printf "[SUPERVISOR] Starting cron service ...\n"
 exec crond -l 8 -f
