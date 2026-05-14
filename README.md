@@ -141,6 +141,8 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
 | `-e GUI_PWD=<fill_password>` | Set Remote GUI password. It will overwrite the password in the config files. |
 | `-e WEBUI_PWD=<fill_password>` | Set Web UI password. It will overwrite the password in the config files. |
+| `-e TEMP_DIR=/temp` | Path inside the container for incomplete downloads. Optional, defaults to `/temp`. |
+| `-e INCOMING_DIR=/incoming` | Path inside the container for completed downloads. Optional, defaults to `/incoming`. |
 | `-e MOD_AUTO_RESTART_ENABLED=true` | Enable aMule auto restart. Check modifications section. |
 | `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'` | aMule auto restart cron mask. Check modifications section. |
 | `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |
