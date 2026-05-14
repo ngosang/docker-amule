@@ -143,6 +143,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e WEBUI_PWD=<fill_password>` | Set Web UI password. It will overwrite the password in the config files. |
 | `-e TEMP_DIR=/temp` | Path inside the container for incomplete downloads. Optional, defaults to `/temp`. |
 | `-e INCOMING_DIR=/incoming` | Path inside the container for completed downloads. Optional, defaults to `/incoming`. |
+| `-e FIX_PERMISSIONS=false` | Change ownership of the temp and incoming directories at startup. Optional, disabled by default. |
 | `-e MOD_AUTO_RESTART_ENABLED=true` | Enable aMule auto restart. Check modifications section. |
 | `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'` | aMule auto restart cron mask. Check modifications section. |
 | `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |

@@ -291,6 +291,8 @@ if [ -n "${WEBUI_PWD}" ]; then
 fi
 
 # Set permissions
-chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_INCOMING}"
-chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_TEMP}"
 chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_HOME}"
+if [ "${FIX_PERMISSIONS:-false}" = "true" ]; then
+    chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_INCOMING}"
+    chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_TEMP}"
+fi
