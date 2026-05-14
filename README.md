@@ -81,7 +81,7 @@ services:
       - MOD_AUTO_RESTART_ENABLED=true
       - MOD_AUTO_RESTART_CRON=0 6 * * *
       - MOD_AUTO_SHARE_ENABLED=false
-      - MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies
+      - MOD_AUTO_SHARE_DIRECTORIES=/downloads/incoming;/my_movies
       - MOD_FIX_KAD_GRAPH_ENABLED=true
       - MOD_FIX_KAD_BOOTSTRAP_ENABLED=true
     ports:
@@ -92,10 +92,12 @@ services:
       - "4672:4672/udp" # ed2k udp
     volumes:
       - <fill_amule_configuration_path>:/home/amule/.aMule
-      - <fill_amule_completed_downloads_path>:/incoming
-      - <fill_amule_incomplete_downloads_path>:/temp
+      - <fill_amule_downloads_path>:/downloads
     restart: unless-stopped
 ```
+
+> [!NOTE]
+> aMule stores completed downloads in `/downloads/incoming` and incomplete downloads in `/downloads/temp` inside the container. These paths can be changed with the `INCOMING_DIR` and `TEMP_DIR` environment variables. You can also mount `/downloads/incoming` and `/downloads/temp` as separate volumes, but be aware that completed files will be copied instead of moved, since they would reside on different filesystems.
 
 ### docker cli
 
@@ -115,12 +117,11 @@ docker run -d \
   -e MOD_AUTO_RESTART_ENABLED=true `#optional` \
   -e 'MOD_AUTO_RESTART_CRON=0 6 * * *' `#optional` \
   -e MOD_AUTO_SHARE_ENABLED=false `#optional` \
-  -e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies `#optional` \
+  -e MOD_AUTO_SHARE_DIRECTORIES=/downloads/incoming;/my_movies `#optional` \
   -e MOD_FIX_KAD_GRAPH_ENABLED=true `#optional` \
   -e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true `#optional` \
   -v <fill_amule_configuration_path>:/home/amule/.aMule \
-  -v <fill_amule_completed_downloads_path>:/incoming \
-  -v <fill_amule_incomplete_downloads_path>:/temp \
+  -v <fill_amule_downloads_path>:/downloads \
   --restart unless-stopped \
   ngosang/amule
 ```
@@ -142,18 +143,17 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
 | `-e GUI_PWD=<fill_password>` | Set Remote GUI password. It will overwrite the password in the config files. |
 | `-e WEBUI_PWD=<fill_password>` | Set Web UI password. It will overwrite the password in the config files. |
-| `-e TEMP_DIR=/temp` | Path inside the container for incomplete downloads. Optional, defaults to `/temp`. |
-| `-e INCOMING_DIR=/incoming` | Path inside the container for completed downloads. Optional, defaults to `/incoming`. |
+| `-e TEMP_DIR=/downloads/temp` | Path inside the container for incomplete downloads. Optional, defaults to `/downloads/temp`. |
+| `-e INCOMING_DIR=/downloads/incoming` | Path inside the container for completed downloads. Optional, defaults to `/downloads/incoming`. |
 | `-e FIX_PERMISSIONS=false` | Change ownership of the temp and incoming directories at startup. Optional, disabled by default. |
 | `-e MOD_AUTO_RESTART_ENABLED=true` | Enable aMule auto restart. Check modifications section. |
 | `-e 'MOD_AUTO_RESTART_CRON=0 6 * * *'` | aMule auto restart cron mask. Check modifications section. |
 | `-e MOD_AUTO_SHARE_ENABLED=false` | Enable aMule auto share. Check modifications section. |
-| `-e MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` | aMule auto share directories with subdirectories. Check modifications section. |
+| `-e MOD_AUTO_SHARE_DIRECTORIES=/downloads/incoming;/my_movies` | aMule auto share directories with subdirectories. Check modifications section. |
 | `-e MOD_FIX_KAD_GRAPH_ENABLED=true` | Fix Kad stats graph bug. Check modifications section. |
 | `-e MOD_FIX_KAD_BOOTSTRAP_ENABLED=true` | Fix Kad bootstrap bug. Check modifications section. |
 | `-v /home/amule/.aMule` | Path to save aMule configuration. |
-| `-v /incoming` | Path to completed torrents. |
-| `-v /temp` | Path to incomplete torrents. |
+| `-v /downloads` | Path to downloads. aMule uses `/downloads/incoming` for completed downloads and `/downloads/temp` for incomplete downloads. |
 
 ## User / Group Identifiers
 
@@ -194,7 +194,7 @@ By default, aMule only shares "incoming" directory and shared folders cannot be 
 
 We have added this option in the Docker image. The configuration is updated when the container starts. Note that sub-directories are also shared!
 * `MOD_AUTO_SHARE_ENABLED=true`
-* `MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies` => List of directories separated by semicolon ';'. Subdirectories will be shared too.
+* `MOD_AUTO_SHARE_DIRECTORIES=/downloads/incoming;/my_movies` => List of directories separated by semicolon ';'. Subdirectories will be shared too.
 
 ### Fix Kad stats graph mod
 

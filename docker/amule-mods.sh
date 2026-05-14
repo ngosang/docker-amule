@@ -45,7 +45,7 @@ mod_fix_kad_bootstrap() {
 
 mod_auto_share() {
     MOD_AUTO_SHARE_ENABLED=${MOD_AUTO_SHARE_ENABLED:-"false"}
-    MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-"/incoming"}
+    MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-"${AMULE_INCOMING}"}
     if [ "${MOD_AUTO_SHARE_ENABLED}" = "true" ]; then
         # Fix issue https://github.com/ngosang/docker-amule/issues/9
         # Share all the directories (separated by semicolon ';') and subdirectories in aMule.

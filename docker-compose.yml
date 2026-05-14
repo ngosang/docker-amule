@@ -23,6 +23,5 @@ services:
       - "4672:4672/udp" # ed2k udp
     volumes:
       - <fill_amule_configuration_path>:/home/amule/.aMule
-      - <fill_amule_completed_downloads_path>:/incoming
-      - <fill_amule_incomplete_downloads_path>:/temp
+      - <fill_amule_downloads_path>:/downloads
     restart: unless-stopped

@@ -3,8 +3,23 @@
 AMULE_UID=${PUID:-1000}
 AMULE_GID=${PGID:-1000}
 
-AMULE_INCOMING=${INCOMING_DIR:-"/incoming"}
-AMULE_TEMP=${TEMP_DIR:-"/temp"}
+if [ -n "${INCOMING_DIR}" ]; then
+    AMULE_INCOMING="${INCOMING_DIR}"
+elif [ -d "/incoming" ]; then
+    printf "[INIT] Legacy directory /incoming detected. Using it for backward compatibility.\n"
+    AMULE_INCOMING="/incoming"
+else
+    AMULE_INCOMING="/downloads/incoming"
+fi
+
+if [ -n "${TEMP_DIR}" ]; then
+    AMULE_TEMP="${TEMP_DIR}"
+elif [ -d "/temp" ]; then
+    printf "[INIT] Legacy directory /temp detected. Using it for backward compatibility.\n"
+    AMULE_TEMP="/temp"
+else
+    AMULE_TEMP="/downloads/temp"
+fi
 AMULE_HOME=/home/amule/.aMule
 AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
