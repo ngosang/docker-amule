@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.3.3-22 (2026/05/15)
+
+* New Docker image for aMule development version. Check available Docker tags in the README
+* Update default paths: INCOMING_DIR=/downloads/incoming, TEMP_DIR=/downloads/temp. Please read the README and update your paths accordingly
+* Fix exit code handling when the Docker container stops: SIGINT/SIGTERM signals are now properly captured
+* Replace entrypoint with s6-overlay supervisor for improved process management and reliability
+* Run amuleweb as a supervised process to enable automatic restart on failure
+* Add FIX_PERMISSIONS environment variable to automatically set ownership of incoming and temp directories
+* Add UMASK environment variable (default: 0002, resulting in 664/775 permissions)
+* Document INCOMING_DIR, TEMP_DIR, UMASK and FIX_PERMISSIONS environment variables in README
+* Refactor entrypoint scripts
+* Clean up architecture-specific Docker tags in CI pipeline
+* Update GitHub Actions runners to Node.js 24
+
 ## 2.3.3-21 (2026/05/12)
 
 * Build aMule from source code
