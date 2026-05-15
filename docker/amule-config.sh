@@ -307,7 +307,7 @@ fi
 
 # Set permissions
 chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_HOME}"
-if [ "${FIX_PERMISSIONS:-false}" = "true" ]; then
+if [ "${FIX_PERMISSIONS:-true}" = "true" ]; then
     chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_INCOMING}"
     chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_TEMP}"
 fi
