@@ -8,8 +8,8 @@ RUN apk add --no-cache \
         boost-dev crypto++-dev libmaxminddb-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev
 
 # Build aMule from source
-ARG AMULE_COMMIT=abfcbb8ad375435fcb8291f0b3973d653def478b
-RUN git clone https://github.com/amule-project/amule.git amule-src && \
+ARG AMULE_COMMIT=d9f964afae017ac6d8744317fd2b65715ca93c5f
+RUN git clone https://github.com/amule-org/amule.git amule-src && \
     git -C amule-src checkout ${AMULE_COMMIT} && \
     cmake -B amule-build amule-src \
         -DCMAKE_INSTALL_PREFIX=/usr \

@@ -18,7 +18,7 @@ jobs:
         name: Get latest aMule commit
         id: get_commit
         run: |
-          AMULE_COMMIT=$(git ls-remote https://github.com/amule-project/amule.git refs/heads/master | cut -f1)
+          AMULE_COMMIT=$(git ls-remote https://github.com/amule-org/amule.git refs/heads/master | cut -f1)
           AMULE_COMMIT_SHORT=${AMULE_COMMIT:0:7}
           DATE_TAG=$(date -u +%Y%m%d)
           echo "amule_commit=${AMULE_COMMIT}"

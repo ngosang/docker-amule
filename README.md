@@ -7,7 +7,7 @@
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ngosang)
 
-[aMule](https://github.com/amule-project/amule) is a multi-platform client for the ED2K file sharing network and based on the windows client eMule. aMule started in August 2003, as a fork of xMule, which is a fork of lMule.
+[aMule](https://github.com/amule-org/amule) is a multi-platform client for the ED2K file sharing network and based on the windows client eMule. aMule started in August 2003, as a fork of xMule, which is a fork of lMule.
 
 ![Download Screenshot](doc/screenshot.png)
 
@@ -181,8 +181,8 @@ You can change the theme editing the `amule.conf` file and changing `Template=Am
 ### Auto restart mod
 
 aMule has some issues that cause it to stop working properly after a few days:
-* [Memory leak](https://github.com/amule-project/amule/issues/314)
-* [Network disconnection](https://github.com/amule-project/amule/issues/315)
+* [Memory leak](https://github.com/amule-org/amule/issues/314)
+* [Network disconnection](https://github.com/amule-org/amule/issues/315)
 
 As workaround, we have implemented a cron scheduler to restart aMule from time to time. To enable this mod set these environment variables:
 * `MOD_AUTO_RESTART_ENABLED=true`
@@ -198,7 +198,7 @@ We have added this option in the Docker image. The configuration is updated when
 
 ### Fix Kad stats graph mod
 
-aMule has an issue when it renders Kad stats graph that [crash the application](https://github.com/amule-project/amule/issues/265). The crash happens when you enter in the Web UI stats after few days running.
+aMule has an issue when it renders Kad stats graph that [crash the application](https://github.com/amule-org/amule/issues/265). The crash happens when you enter in the Web UI stats after few days running.
 
 As workaround, we removed the image causing the issue from the Web UI. Since the image is not requested the server doesn't crash.
 * `MOD_FIX_KAD_GRAPH_ENABLED=true`
