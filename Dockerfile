@@ -4,37 +4,28 @@ WORKDIR /tmp
 
 # Install build tools
 RUN apk add --no-cache \
-        gcc g++ make curl git \
-        boost-dev crypto++-dev geoip-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev
+        gcc g++ cmake make git \
+        boost-dev crypto++-dev libmaxminddb-dev libupnp-dev readline-dev wxwidgets-dev zlib-dev
 
 # Build aMule from source
-ENV AMULE_VERSION=2.3.3
-RUN curl -fL "https://downloads.sourceforge.net/project/amule/aMule/${AMULE_VERSION}/aMule-${AMULE_VERSION}.tar.gz" -o amule.tar.gz && \
-    tar -xf amule.tar.gz && \
-    sed -i '1s/^/#include <exception>\n/' aMule-${AMULE_VERSION}/src/libs/common/MuleDebug.cpp && \
-    cd aMule-${AMULE_VERSION} && \
-    ./configure \
-        CXXFLAGS="-O2" \
-        CFLAGS="-O2" \
-        --prefix=/usr \
-        --mandir=/usr/share/man \
-        --enable-alcc \
-        --enable-amule-daemon \
-        --enable-amulecmd \
-        --enable-geoip \
-        --enable-optimize \
-        --enable-upnp \
-        --enable-webserver \
-        --disable-debug \
-        --disable-nls \
-        --disable-monolithic \
-        --with-boost && \
-    make -j"$(nproc)" && \
-    make install && \
+ARG AMULE_VERSION=3.0.0
+RUN git clone https://github.com/amule-org/amule.git amule-src && \
+    git -C amule-src checkout ${AMULE_VERSION} && \
+    cmake -B amule-build amule-src \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_MONOLITHIC=NO \
+        -DBUILD_DAEMON=YES \
+        -DBUILD_AMULECMD=YES \
+        -DBUILD_WEBSERVER=YES \
+        -DBUILD_ALCC=YES \
+        -DENABLE_IP2COUNTRY=YES \
+        -DENABLE_UPNP=YES \
+        -DENABLE_NLS=NO && \
+    cmake --build amule-build -j"$(nproc)" && \
+    cmake --install amule-build && \
     strip -s /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k && \
-    mkdir -p /usr/share/man/man1 && \
-    install -m644 docs/man/amulecmd.1 docs/man/amuled.1 docs/man/amuleweb.1 docs/man/ed2k.1 /usr/share/man/man1/ && \
-    gzip /usr/share/man/man1/amulecmd.1 /usr/share/man/man1/amuled.1 \
+    gzip /usr/share/man/man1/alcc.1 /usr/share/man/man1/amulecmd.1 /usr/share/man/man1/amuled.1 \
         /usr/share/man/man1/amuleweb.1 /usr/share/man/man1/ed2k.1 && \
     rm -rf /tmp/*
 
@@ -52,12 +43,13 @@ LABEL maintainer="ngosang@hotmail.es"
 # Copy binaries, Web UI and man docs
 COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
 COPY --from=builder /usr/share/amule /usr/share/amule
-COPY --from=builder /usr/share/man/man1/amulecmd.1.gz /usr/share/man/man1/amuled.1.gz \
-    /usr/share/man/man1/amuleweb.1.gz /usr/share/man/man1/ed2k.1.gz /usr/share/man/man1/
+COPY --from=builder /usr/share/man/man1/alcc.1.gz /usr/share/man/man1/amulecmd.1.gz \
+    /usr/share/man/man1/amuled.1.gz /usr/share/man/man1/amuleweb.1.gz /usr/share/man/man1/ed2k.1.gz \
+    /usr/share/man/man1/
 
 # Install runtime dependencies and remove unnecessary locale files
 RUN apk add --no-cache \
-        crypto++ readline libgcc libstdc++ geoip libupnp libpng wxwidgets tzdata pwgen curl mandoc \
+        crypto++ readline libgcc libstdc++ libmaxminddb libupnp libpng wxwidgets tzdata pwgen curl mandoc \
         s6 execline su-exec && \
     rm -rf /usr/share/locale && \
     # Check binaries are OK
@@ -67,6 +59,7 @@ RUN apk add --no-cache \
     ldd /usr/bin/amuleweb > /dev/null && \
     ldd /usr/bin/ed2k > /dev/null && \
     # Check man documentation is OK
+    man alcc > /dev/null && \
     man amulecmd > /dev/null && \
     man amuled > /dev/null && \
     man amuleweb > /dev/null && \

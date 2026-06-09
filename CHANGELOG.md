@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0-1 (2026/06/09)
+
+* Update aMule to 3.0.0 stable release
+* Update aMule repository URL to https://github.com/amule-org/amule
+* Build aMule from source using CMake (new upstream build system)
+* Replace GeoIP with libmaxminddb for IP-to-country geolocation
+
 ## 2.3.3-22 (2026/05/15)
 
 * New Docker image for aMule development version. Check available Docker tags in the README
