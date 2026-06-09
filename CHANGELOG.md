@@ -2,6 +2,7 @@
 
 ## 3.0.0-1 (2026/06/09)
 
+* **Major release:** Please read this changelog carefully before upgrading. It is strongly recommended to back up your aMule config folder and to create new `amule.conf` and `remote.conf` files with default values.
 * Update aMule to 3.0.0 stable release
 * Replace Alpine Linux base Docker image with Debian trixie-slim (required for debug and backtraces)
 * Update supported architectures: add linux/386 and linux/arm/v5, drop linux/arm/v6
