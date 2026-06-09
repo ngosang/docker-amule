@@ -23,7 +23,7 @@ fi
 AMULE_HOME=/home/amule/.aMule
 AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
-KAD_NODES_DAT_URL="http://upd.emule-security.org/nodes.dat"
+KAD_NODES_DAT_URL="https://upd.emule-security.org/nodes.dat"
 
 printf "[INIT] Starting aMule configuration ...\n"
 
@@ -84,12 +84,11 @@ if [ ! -f ${AMULE_CONF} ]; then
     printf "[INIT] File %s NOT found. Generating new default configuration ...\n" "${AMULE_CONF}"
     cat > ${AMULE_CONF} <<- EOM
 [eMule]
-AppVersion=2.3.3
-Nick=http://www.aMule.org
+Nick=https://amule-org.github.io
 QueueSizePref=50
 MaxUpload=0
 MaxDownload=0
-SlotAllocation=50
+SlotAllocation=20
 Port=4662
 UDPPort=4672
 UDPEnable=1
@@ -98,7 +97,7 @@ Autoconnect=1
 MaxSourcesPerFile=300
 MaxConnections=500
 MaxConnectionsPerFiveSeconds=20
-RemoveDeadServer=0
+RemoveDeadServer=1
 DeadServerRetry=3
 ServerKeepAliveTimeout=0
 Reconnect=1
@@ -125,7 +124,7 @@ ManualHighPrio=0
 StartNextFile=0
 StartNextFileSameCat=0
 StartNextFileAlpha=0
-FileBufferSizePref=1400
+FileBufferSizePref=1000
 DAPPref=1
 UAPPref=1
 AllocateFullFile=0
@@ -134,6 +133,7 @@ OnlineSignature=0
 OnlineSignatureUpdate=5
 EnableTrayIcon=0
 MinToTray=0
+Notifications=0
 ConfirmExit=1
 StartupMinimized=0
 3DDepth=10
@@ -166,6 +166,8 @@ ShowMessagesInLog=1
 FilterComments=0
 CommentFilter=
 ShareHiddenFiles=0
+AutoRescanSharedDirs=1
+FollowSymlinksInShares=1
 AutoSortDownloads=0
 NewVersionCheck=0
 AdvancedSpamFilter=1
@@ -179,11 +181,11 @@ ShowAllNotCats=0
 SmartIdState=0
 DropSlowSources=0
 KadNodesUrl=${KAD_NODES_DAT_URL}
-Ed2kServersUrl=http://upd.emule-security.org/server.met
+Ed2kServersUrl=https://upd.emule-security.org/server.met
 ShowRatesOnTitle=0
 GeoLiteCountryUpdateUrl=http://mailfud.org/geoip-legacy/GeoIP.dat.gz
-StatsServerName=Shorty ED2K stats
-StatsServerURL=http://ed2k.shortypower.org/?hash=
+StatsServerName=Shorty's ED2K stats
+StatsServerURL=https://ed2k.shortypower.org/?hash=
 CreateSparseFiles=1
 [Browser]
 OpenPageInTab=1
@@ -223,6 +225,7 @@ Template=AmuleWebUI-Reloaded
 Path=amuleweb
 [GUI]
 HideOnClose=0
+AppImageIntegrationDeclined=0
 [Razor_Preferences]
 FastED2KLinksHandler=1
 [SkinGUIOptions]
@@ -274,10 +277,12 @@ if [ ! -f ${REMOTE_CONF} ]; then
     cat > ${REMOTE_CONF} <<- EOM
 Locale=
 [EC]
-Host=localhost
+Host=127.0.0.1
 Port=4712
 Password=${AMULE_GUI_ENCODED_PWD}
-[Webserver]
+ZLIB=1
+ForceZLIB=0
+[WebServer]
 Port=4711
 UPnPWebServerEnabled=0
 UPnPTCPPort=50001
@@ -286,6 +291,7 @@ UseGzip=1
 AllowGuest=0
 AdminPassword=${AMULE_WEBUI_ENCODED_PWD}
 GuestPassword=
+PageRefreshTime=120
 EOM
     printf "[INIT] File %s successfullly generated.\n" "${REMOTE_CONF}"
 else
