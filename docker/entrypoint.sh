@@ -10,7 +10,6 @@ set -e
 printf "[INIT] Starting aMule mods ...\n"
 . /home/amule/amule-mods.sh
 mod_auto_restart
-mod_fix_kad_graph
 mod_fix_kad_bootstrap
 mod_auto_share
 

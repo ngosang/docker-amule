@@ -14,19 +14,6 @@ mod_auto_restart() {
     fi
 }
 
-mod_fix_kad_graph() {
-    MOD_FIX_KAD_GRAPH_ENABLED=${MOD_FIX_KAD_GRAPH_ENABLED:-"false"}
-    if [ "${MOD_FIX_KAD_GRAPH_ENABLED}" = "true" ]; then
-        # Fix bug https://github.com/amule-project/amule/issues/265
-        # Removes the images causing the issue. They won't be visible in the Web UI.
-        # grep -rnw '/usr/share/amule/webserver' -e 'amule_stats_kad.png'
-        printf "[MOD_FIX_KAD_GRAPH] Removing Kad stats graph to fix potential crash... You can disable this mod with MOD_FIX_KAD_GRAPH_ENABLED=false\n"
-        sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/default/amuleweb-main-kad.php
-        sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-kad.php
-        sed -i 's/amule_stats_kad.png//g' /usr/share/amule/webserver/AmuleWebUI-Reloaded/amuleweb-main-stats.php
-    fi
-}
-
 mod_fix_kad_bootstrap() {
     MOD_FIX_KAD_BOOTSTRAP_ENABLED=${MOD_FIX_KAD_BOOTSTRAP_ENABLED:-"true"}
     if [ "${MOD_FIX_KAD_BOOTSTRAP_ENABLED}" = "true" ]; then

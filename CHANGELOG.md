@@ -6,6 +6,7 @@
 * Update aMule repository URL to https://github.com/amule-org/amule
 * Build aMule from source using CMake (new upstream build system)
 * Replace GeoIP with libmaxminddb for IP-to-country geolocation
+* Remove fix Kad graph mod (MOD_FIX_KAD_GRAPH). Bug fixed upstream in aMule 3.0.0
 
 ## 2.3.3-22 (2026/05/15)
 
