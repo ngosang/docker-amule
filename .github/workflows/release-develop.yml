@@ -30,27 +30,32 @@ jobs:
 
   build-docker-images:
     needs: get-amule-commit
-    name: build-docker-images (${{ matrix.arch }})
+    name: build-docker-images (${{ matrix.variant.name }}-${{ matrix.arch.name }})
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        include:
+        variant:
+          - name: develop
+            file: ./Dockerfile
+          - name: debug
+            file: ./Dockerfile.debug
+        arch:
           - platform: linux/386
-            arch: 386
+            name: 386
           - platform: linux/amd64
-            arch: amd64
+            name: amd64
           - platform: linux/arm/v5
-            arch: armv5
+            name: armv5
           - platform: linux/arm/v7
-            arch: armv7
+            name: armv7
           - platform: linux/arm64/v8
-            arch: arm64v8
+            name: arm64v8
           - platform: linux/ppc64le
-            arch: ppc64le
+            name: ppc64le
           - platform: linux/riscv64
-            arch: riscv64
+            name: riscv64
           - platform: linux/s390x
-            arch: s390x
+            name: s390x
     steps:
       -
         name: Checkout
@@ -80,8 +85,8 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./Dockerfile
-          platforms: ${{ matrix.platform }}
+          file: ${{ matrix.variant.file }}
+          platforms: ${{ matrix.arch.platform }}
           provenance: false
           sbom: false
           outputs: |
@@ -90,7 +95,7 @@ jobs:
           build-args: |
             AMULE_REF=${{ needs.get-amule-commit.outputs.amule_commit }}
           labels: |
-            org.opencontainers.image.version=develop-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}
+            org.opencontainers.image.version=${{ matrix.variant.name }}-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}
       -
         name: Export digest
         run: |
@@ -101,21 +106,25 @@ jobs:
         name: Upload digest
         uses: actions/upload-artifact@v7
         with:
-          name: digests-${{ matrix.arch }}
+          name: digests-${{ matrix.variant.name }}-${{ matrix.arch.name }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
 
   create-manifest:
     needs: [get-amule-commit, build-docker-images]
+    name: create-manifest (${{ matrix.variant }})
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        variant: [develop, debug]
     steps:
       -
         name: Download digests
         uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
-          pattern: digests-*
+          pattern: digests-${{ matrix.variant }}-*
           merge-multiple: true
       -
         name: Set up Docker Buildx
@@ -137,19 +146,19 @@ jobs:
         name: Create multi-arch manifest on DockerHub
         working-directory: /tmp/digests
         run: |
-          TAG=develop-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}
+          TAG=${{ matrix.variant }}-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}
           REPO=ngosang/amule
           docker buildx imagetools create \
             --tag ${REPO}:${TAG} \
-            --tag ${REPO}:develop \
+            --tag ${REPO}:${{ matrix.variant }} \
             $(printf "${REPO}@sha256:%s " *)
       -
         name: Create multi-arch manifest on GHCR
         working-directory: /tmp/digests
         run: |
-          TAG=develop-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}
+          TAG=${{ matrix.variant }}-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}
           REPO=ghcr.io/ngosang/amule
           docker buildx imagetools create \
             --tag ${REPO}:${TAG} \
-            --tag ${REPO}:develop \
+            --tag ${REPO}:${{ matrix.variant }} \
             $(printf "${REPO}@sha256:%s " *)

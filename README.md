@@ -35,6 +35,13 @@ Development:
 * `develop` — Latest development build (compiled from aMule master branch).
 * `develop-20260512-abc1234` — Specific development build: date + aMule upstream commit.
 
+Debug:
+* `debug` — Latest debug build (compiled from aMule master branch).
+* `debug-20260512-abc1234` — Specific debug build: date + aMule upstream commit.
+
+> [!NOTE]
+> The `debug` images are compiled in **Debug** mode (`CMAKE_BUILD_TYPE=Debug`, full symbols, no optimizations) and ship with the debugging tools `gdb`, `strace`, `lsof` and `heaptrack` preinstalled, so you can debug crashes and memory issues of the aMule development builds. As a result they are larger and slower than the `stable` and `develop` images and are not intended for production use. The `stable` and `develop` images are regular optimized builds without these tools.
+
 ### Supported Architectures
 
 The architectures supported by this image are:
