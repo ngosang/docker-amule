@@ -29,8 +29,6 @@ RUN git clone https://github.com/amule-org/amule.git amule-src && \
     cmake --build amule-build -j"$(nproc)" && \
     cmake --install amule-build && \
     strip -s /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k && \
-    gzip /usr/share/man/man1/alcc.1 /usr/share/man/man1/amulecmd.1 /usr/share/man/man1/amuled.1 \
-        /usr/share/man/man1/amuleweb.1 /usr/share/man/man1/ed2k.1 && \
     rm -rf /tmp/*
 
 # Download alternative Web UI
@@ -46,29 +44,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 LABEL maintainer="ngosang@hotmail.es"
 
-# Copy binaries, Web UI and man docs
+# Copy binaries and Web UI
 COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
 COPY --from=builder /usr/share/amule /usr/share/amule
-COPY --from=builder /usr/share/man/man1/alcc.1.gz /usr/share/man/man1/amulecmd.1.gz \
-    /usr/share/man/man1/amuled.1.gz /usr/share/man/man1/amuleweb.1.gz /usr/share/man/man1/ed2k.1.gz \
-    /usr/share/man/man1/
 
 # Install runtime dependencies and remove unnecessary locale files
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libcrypto++8t64 libreadline8t64 libgcc-s1 libstdc++6 libpng16-16t64 libwxbase3.2-1t64 libglib2.0-0t64 \
-        tzdata pwgen curl man-db \
+        tzdata pwgen curl \
         s6 cron systemd-standalone-sysusers \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \
     # Check binaries are OK (fail the build if any shared library is missing)
     for bin in alcc amulecmd amuled amuleweb ed2k; do \
         if ldd "/usr/bin/$bin" | grep -q "not found"; then echo "ERROR: missing shared libraries in $bin:"; ldd "/usr/bin/$bin"; exit 1; fi; \
-    done && \
-    # Check man documentation is OK
-    man alcc > /dev/null && \
-    man amulecmd > /dev/null && \
-    man amuled > /dev/null && \
-    man amuleweb > /dev/null && \
-    man ed2k > /dev/null
+    done
 
 # Add entrypoint and S6 services
 COPY --chmod=755 docker/entrypoint.sh docker/amule-config.sh docker/amule-mods.sh /home/amule/
