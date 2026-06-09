@@ -9,7 +9,7 @@
 * Update default amule.conf and remote.conf templates to match aMule 3.0.0 defaults (new keys, updated values and HTTPS URLs)
 * Install ca-certificates for HTTPS downloads (nodes.dat, server.met, ipfilter.zip)
 * Remove UPnP support. It only works with Docker host networking (network_mode: host)
-* Remove GeoIP/IP2Country support. This remote GUI (amulegui) keep working (resolves country flags client-side)
+* Remove GeoIP/IP2Country support. The remote GUI (amulegui) keeps working (resolves country flags client-side)
 * Remove AmuleWebUI-Reloaded theme (not compatible with aMule 3.0.0). Existing configs are migrated to the default theme
 * Remove man pages from the Docker image. You can use 'command --help' to get similar information
 * Remove fix Kad graph mod (MOD_FIX_KAD_GRAPH). Bug fixed upstream in aMule 3.0.0
