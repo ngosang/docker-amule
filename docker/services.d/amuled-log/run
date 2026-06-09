@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Stream amuled's on-disk logfile to stdout so it shows up in `docker logs`.
+# amuled is started without -o because its stdout log path mangles non-ASCII
+# (non-UTF-8) paths in this C/POSIX-locale image, while the logfile is written
+# as UTF-8 and stays correct. See docker/services.d/amuled/run for details.
+LOGFILE="${AMULE_HOME}/logfile"
+
+# Wait for amuled to create the logfile before following it. tail -F (--retry
+# --follow=name) then keeps following across the O_TRUNC amuled does on each
+# (re)start, so logs keep flowing after an amuled restart.
+while [ ! -f "${LOGFILE}" ]; do
+    sleep 1
+done
+
+# stdbuf -oL: flush per line so log lines reach `docker logs` promptly instead
+# of sitting in tail's block buffer.
+exec stdbuf -oL tail -n +1 -F "${LOGFILE}"
