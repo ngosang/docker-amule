@@ -8,10 +8,11 @@
 * Remove UPnP support. It only works with Docker host networking (network_mode: host)
 * Remove GeoIP/IP2Country support. This remote GUI (amulegui) keep working (resolves country flags client-side)
 * Update default amule.conf and remote.conf templates to match aMule 3.0.0 defaults (new keys, updated values and HTTPS URLs)
-* Remove man pages from the Docker image
+* Remove man pages from the Docker image. You can use `command --help` to get similar information
 * Remove fix Kad graph mod (MOD_FIX_KAD_GRAPH). Bug fixed upstream in aMule 3.0.0
 * Update aMule repository URL to https://github.com/amule-org/amule
 * Build aMule from source using CMake (new upstream build system)
+* Optimize build time by performing shallow git clones
 
 ## 2.3.3-22 (2026/05/15)
 

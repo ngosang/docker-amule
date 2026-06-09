@@ -13,8 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Build aMule from source
 ARG AMULE_VERSION=3.0.0
-RUN git clone https://github.com/amule-org/amule.git amule-src && \
-    git -C amule-src checkout ${AMULE_VERSION} && \
+RUN git clone --depth 1 --branch ${AMULE_VERSION} https://github.com/amule-org/amule.git amule-src && \
     cmake -B amule-build amule-src \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=Release \
@@ -34,8 +33,9 @@ RUN git clone https://github.com/amule-org/amule.git amule-src && \
 # Download alternative Web UI
 ENV AMULEWEBUI_RELOADED_COMMIT=3fef80d724b71366667d7ae9de5809b878b98f75
 RUN cd /usr/share/amule/webserver && \
-    git clone https://github.com/MatteoRagni/AmuleWebUI-Reloaded.git AmuleWebUI-Reloaded && \
-    git -C AmuleWebUI-Reloaded checkout ${AMULEWEBUI_RELOADED_COMMIT} && \
+    git init -q AmuleWebUI-Reloaded && \
+    git -C AmuleWebUI-Reloaded fetch --depth 1 https://github.com/MatteoRagni/AmuleWebUI-Reloaded.git ${AMULEWEBUI_RELOADED_COMMIT} && \
+    git -C AmuleWebUI-Reloaded checkout -q FETCH_HEAD && \
     rm -rf AmuleWebUI-Reloaded/.git AmuleWebUI-Reloaded/doc-images AmuleWebUI-Reloaded/LICENSE AmuleWebUI-Reloaded/README.md
 
 FROM debian:trixie-slim
