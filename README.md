@@ -11,8 +11,6 @@
 
 ![Download Screenshot](doc/screenshot.png)
 
-Inspired by [tchabaud](https://github.com/tchabaud/dockerfiles/tree/master/amule) and [synopsis8](https://github.com/synopsis8/dockerfiles/tree/master/amule) work.
-
 ## Docker Images
 
 The image is based on `debian:trixie-slim` and compiles aMule from source code.
