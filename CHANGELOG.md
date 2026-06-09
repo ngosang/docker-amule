@@ -19,6 +19,7 @@
 * Build aMule from source using CMake (new upstream build system)
 * Unify Dockerfile parameterized by the AMULE_REF build argument (accepts a tag, branch or commit)
 * Optimize build time by performing shallow git clones
+* Update README.md and docker-compose.yml
 
 ## 2.3.3-22 (2026/05/15)
 

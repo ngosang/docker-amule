@@ -15,6 +15,8 @@ Inspired by [tchabaud](https://github.com/tchabaud/dockerfiles/tree/master/amule
 
 ## Docker Images
 
+The image is based on `debian:trixie-slim` and compiles aMule from source code.
+
 Docker images are available in [DockerHub](https://hub.docker.com/r/ngosang/amule) and [GHCR](https://github.com/users/ngosang/packages/container/package/amule).
 
 ```bash
@@ -49,6 +51,9 @@ The architectures supported by this image are:
 ## Application Setup
 
 The web interface is at: `<your-ip>:4711`
+
+> [!NOTE]
+> If you don't set `GUI_PWD` / `WEBUI_PWD`, a random password is generated on the first start and printed to the container logs. Run `docker logs amule` to retrieve it.
 
 For better download speed you have to open these ports:
 
@@ -163,11 +168,7 @@ In this instance `PUID=1000` and `PGID=1000`, to find yours use `id user` as bel
     uid=1000(dockeruser) gid=1000(dockergroup) groups=1000(dockergroup)
 ```
 
-## Modifications
-
-The Docker image includes some unofficial features. All of them are optional.
-
-### Custom Web UI theme
+## Custom Web UI theme
 
 The Docker image ships with the default aMule Web UI theme. The previously bundled
 [AmuleWebUI-Reloaded](https://github.com/MatteoRagni/AmuleWebUI-Reloaded) theme has been
@@ -188,13 +189,13 @@ services:
 Then edit the `amule.conf` file and set `Template=MyTheme`. Leave `Template=` empty to
 use the default theme.
 
+## Modifications
+
+The Docker image includes some unofficial features. All of them are optional.
+
 ### Auto restart mod
 
-aMule has some issues that cause it to stop working properly after a few days:
-* [Memory leak](https://github.com/amule-org/amule/issues/314)
-* [Network disconnection](https://github.com/amule-org/amule/issues/315)
-
-As workaround, we have implemented a cron scheduler to restart aMule from time to time. To enable this mod set these environment variables:
+We have implemented a cron scheduler to restart aMule from time to time. To enable this mod set these environment variables:
 * `MOD_AUTO_RESTART_ENABLED=true`
 * `MOD_AUTO_RESTART_CRON=0 6 * * *` => Cron mask is configurable. In the example it restarts everyday at 6:00h.
 
