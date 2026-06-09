@@ -220,7 +220,7 @@ UPnPWebServerEnabled=0
 UseGzip=1
 UseLowRightsUser=0
 PageRefreshTime=120
-Template=AmuleWebUI-Reloaded
+Template=
 Path=amuleweb
 [GUI]
 HideOnClose=0
@@ -283,7 +283,7 @@ ForceZLIB=0
 Port=4711
 UPnPWebServerEnabled=0
 UPnPTCPPort=50001
-Template=AmuleWebUI-Reloaded
+Template=
 UseGzip=1
 AllowGuest=0
 AdminPassword=${AMULE_WEBUI_ENCODED_PWD}
@@ -297,6 +297,12 @@ fi
 
 # Ensure WebServer is not started by amuled
 sed -i '/^\[WebServer\]/,/^\[/{s/^Enabled=.*/Enabled=0/}' "${AMULE_CONF}"
+
+# Migrate configs from the removed AmuleWebUI-Reloaded theme to the default theme,
+# unless the user mounted it (or any theme) as an external volume at that path.
+if [ ! -d /usr/share/amule/webserver/AmuleWebUI-Reloaded ]; then
+    sed -i 's/^Template=AmuleWebUI-Reloaded$/Template=/' "${AMULE_CONF}" "${REMOTE_CONF}"
+fi
 
 # Replace passwords
 if [ -n "${GUI_PWD}" ]; then

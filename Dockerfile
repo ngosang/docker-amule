@@ -33,14 +33,6 @@ RUN git init -q amule-src && \
     cmake --install amule-build && \
     rm -rf /tmp/*
 
-# Download alternative Web UI
-ENV AMULEWEBUI_RELOADED_COMMIT=3fef80d724b71366667d7ae9de5809b878b98f75
-RUN cd /usr/share/amule/webserver && \
-    git init -q AmuleWebUI-Reloaded && \
-    git -C AmuleWebUI-Reloaded fetch --depth 1 https://github.com/MatteoRagni/AmuleWebUI-Reloaded.git ${AMULEWEBUI_RELOADED_COMMIT} && \
-    git -C AmuleWebUI-Reloaded checkout -q FETCH_HEAD && \
-    rm -rf AmuleWebUI-Reloaded/.git AmuleWebUI-Reloaded/doc-images AmuleWebUI-Reloaded/LICENSE AmuleWebUI-Reloaded/README.md
-
 FROM debian:trixie-slim
 
 ENV DEBIAN_FRONTEND=noninteractive

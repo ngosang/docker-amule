@@ -167,11 +167,26 @@ In this instance `PUID=1000` and `PGID=1000`, to find yours use `id user` as bel
 
 The Docker image includes some unofficial features. All of them are optional.
 
-### aMule Web UI Reloaded theme
+### Custom Web UI theme
 
-The Docker image includes the classic aMule Web UI and [AmuleWebUI-Reloaded](https://github.com/MatteoRagni/AmuleWebUI-Reloaded) theme.
+The Docker image ships with the default aMule Web UI theme. The previously bundled
+[AmuleWebUI-Reloaded](https://github.com/MatteoRagni/AmuleWebUI-Reloaded) theme has been
+removed because it is not compatible with aMule 3.0.0.
 
-You can change the theme editing the `amule.conf` file and changing `Template=AmuleWebUI-Reloaded`. Let this option empty to use the default theme.
+You can still use a custom theme by mounting it as an external volume inside the web
+server templates directory (`/usr/share/amule/webserver/<ThemeName>`) and pointing the
+`Template` option to it in the `amule.conf` file:
+
+```yaml
+services:
+  amule:
+    # ... rest of the service definition ...
+    volumes:
+      - /path/to/my-theme:/usr/share/amule/webserver/MyTheme
+```
+
+Then edit the `amule.conf` file and set `Template=MyTheme`. Leave `Template=` empty to
+use the default theme.
 
 ### Auto restart mod
 
