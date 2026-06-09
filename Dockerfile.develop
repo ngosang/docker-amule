@@ -7,7 +7,7 @@ WORKDIR /tmp
 # Install build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates pkg-config \
-        build-essential cmake make git \
+        build-essential cmake make git binutils-dev \
         libboost-dev libcrypto++-dev libglib2.0-dev libreadline-dev libwxgtk3.2-dev zlib1g-dev libpng-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,7 +29,6 @@ RUN git init -q amule-src && \
         -DENABLE_NLS=NO && \
     cmake --build amule-build -j"$(nproc)" && \
     cmake --install amule-build && \
-    strip -s /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k && \
     rm -rf /tmp/*
 
 # Download alternative Web UI
@@ -53,6 +52,7 @@ COPY --from=builder /usr/share/amule /usr/share/amule
 # Install runtime dependencies and remove unnecessary locale files
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libcrypto++8t64 libreadline8t64 libgcc-s1 libstdc++6 libpng16-16t64 libwxbase3.2-1t64 libglib2.0-0t64 \
+        libbinutils \
         tzdata pwgen curl \
         s6 cron systemd-standalone-sysusers \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \

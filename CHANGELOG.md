@@ -5,6 +5,7 @@
 * Update aMule to 3.0.0 stable release
 * Replace base Docker image with Debian trixie-slim (previously Alpine Linux)
 * Update supported architectures: add linux/386 and linux/arm/v5, drop linux/arm/v6
+* Enable symbolized crash backtraces. When aMule crashes you will see function names in the log traces
 * Remove UPnP support. It only works with Docker host networking (network_mode: host)
 * Remove GeoIP/IP2Country support. This remote GUI (amulegui) keep working (resolves country flags client-side)
 * Update default amule.conf and remote.conf templates to match aMule 3.0.0 defaults (new keys, updated values and HTTPS URLs)
