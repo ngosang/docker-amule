@@ -16,6 +16,7 @@
 * Simplify auto share mod (MOD_AUTO_SHARE) to use aMule 3.0.0 native recursive shares (shareddir-recursive.dat)
 * Update aMule repository URL to https://github.com/amule-org/amule
 * Build aMule from source using CMake (new upstream build system)
+* Unify Dockerfile parameterized by the AMULE_REF build argument (accepts a tag, branch or commit)
 * Optimize build time by performing shallow git clones
 
 ## 2.3.3-22 (2026/05/15)

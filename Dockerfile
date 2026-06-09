@@ -11,9 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libboost-dev libcrypto++-dev libglib2.0-dev libreadline-dev libwxgtk3.2-dev zlib1g-dev libpng-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Build aMule from source
-ARG AMULE_VERSION=3.0.0
-RUN git clone --depth 1 --branch ${AMULE_VERSION} https://github.com/amule-org/amule.git amule-src && \
+# Build aMule from source (AMULE_REF can be a tag, branch, or commit SHA)
+ARG AMULE_REF=3.0.0
+RUN git init -q amule-src && \
+    git -C amule-src fetch --depth 1 https://github.com/amule-org/amule.git ${AMULE_REF} && \
+    git -C amule-src checkout -q FETCH_HEAD && \
     # libatomic1 only ships libatomic.so.1; find_library(atomic) needs the unversioned symlink
     so="$(find /usr/lib -name 'libatomic.so.1' -print -quit)" && [ -n "$so" ] && ln -sf "$(basename "$so")" "${so%.1}" ; \
     cmake -B amule-build amule-src \
@@ -71,8 +73,11 @@ ENTRYPOINT ["/home/amule/entrypoint.sh"]
 
 # HELP
 #
-# => Build Docker image
+# => Build Docker image (stable release, AMULE_REF defaults to the latest stable tag)
 # docker build -t ngosang/amule:test --progress=plain .
+#
+# => Build a develop image from a specific aMule branch or commit
+# docker build --build-arg AMULE_REF=<branch-or-commit> -t ngosang/amule:test --progress=plain .
 #
 # => Build multi-arch Docker image
 # docker buildx create --use

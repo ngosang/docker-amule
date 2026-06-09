@@ -80,7 +80,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./Dockerfile.develop
+          file: ./Dockerfile
           platforms: ${{ matrix.platform }}
           provenance: false
           sbom: false
@@ -88,7 +88,7 @@ jobs:
             type=image,name=ngosang/amule,push-by-digest=true,name-canonical=true,push=true
             type=image,name=ghcr.io/ngosang/amule,push-by-digest=true,name-canonical=true,push=true
           build-args: |
-            AMULE_COMMIT=${{ needs.get-amule-commit.outputs.amule_commit }}
+            AMULE_REF=${{ needs.get-amule-commit.outputs.amule_commit }}
           labels: |
             org.opencontainers.image.version=develop-${{ needs.get-amule-commit.outputs.date_tag }}-${{ needs.get-amule-commit.outputs.amule_commit_short }}
       -
