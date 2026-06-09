@@ -5,14 +5,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /tmp
 
 # Install build tools
+# libatomic1: required for 32-bit targets (386, arm/v5, arm/v7)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential cmake make git binutils-dev ca-certificates pkg-config \
+        build-essential cmake make git binutils-dev ca-certificates pkg-config libatomic1 \
         libboost-dev libcrypto++-dev libglib2.0-dev libreadline-dev libwxgtk3.2-dev zlib1g-dev libpng-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Build aMule from source
 ARG AMULE_VERSION=3.0.0
 RUN git clone --depth 1 --branch ${AMULE_VERSION} https://github.com/amule-org/amule.git amule-src && \
+    # libatomic1 only ships libatomic.so.1; find_library(atomic) needs the unversioned symlink
+    so="$(find /usr/lib -name 'libatomic.so.1' -print -quit)" && [ -n "$so" ] && ln -sf "$(basename "$so")" "${so%.1}" ; \
     cmake -B amule-build amule-src \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=Release \
@@ -49,7 +52,7 @@ COPY --from=builder /usr/share/amule /usr/share/amule
 # Install runtime dependencies and remove unnecessary locale files
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libcrypto++8t64 libreadline8t64 libgcc-s1 libstdc++6 libpng16-16t64 libwxbase3.2-1t64 libglib2.0-0t64 \
-        libbinutils ca-certificates curl tzdata pwgen s6 cron systemd-standalone-sysusers \
+        libatomic1 libbinutils ca-certificates curl tzdata pwgen s6 cron systemd-standalone-sysusers \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \
     # Check binaries are OK (fail the build if any shared library is missing)
     for bin in alcc amulecmd amuled amuleweb ed2k; do \
