@@ -46,7 +46,7 @@ COPY --from=builder /usr/share/amule /usr/share/amule
 # Install runtime dependencies and remove unnecessary locale files
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libcrypto++8t64 libreadline8t64 libgcc-s1 libstdc++6 libpng16-16t64 libwxbase3.2-1t64 libglib2.0-0t64 \
-        libatomic1 libbinutils ca-certificates curl tzdata pwgen s6 cron systemd-standalone-sysusers \
+        libatomic1 libbinutils ca-certificates curl tzdata procps pwgen s6 cron systemd-standalone-sysusers \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \
     # Check binaries are OK (fail the build if any shared library is missing)
     for bin in alcc amulecmd amuled amuleweb ed2k; do \
