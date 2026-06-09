@@ -21,6 +21,7 @@ RUN git init -q amule-src && \
     cmake -B amule-build amule-src \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTING=NO \
         -DBUILD_MONOLITHIC=NO \
         -DBUILD_DAEMON=YES \
         -DBUILD_AMULECMD=YES \
