@@ -3,4 +3,4 @@
 printf "[SUPERVISOR] Waiting 5 s before starting amuleweb service ...\n"
 sleep 5
 printf "[SUPERVISOR] Starting amuleweb service ...\n"
-exec su-exec "${AMULE_USER}" amuleweb --amule-config-file="${AMULE_CONF}"
+exec setpriv --reuid "${AMULE_UID}" --regid "${AMULE_GID}" --init-groups amuleweb --amule-config-file="${AMULE_CONF}"

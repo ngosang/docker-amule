@@ -37,8 +37,9 @@ Development:
 
 The architectures supported by this image are:
 
+* linux/386
 * linux/amd64
-* linux/arm/v6
+* linux/arm/v5
 * linux/arm/v7
 * linux/arm64/v8
 * linux/ppc64le

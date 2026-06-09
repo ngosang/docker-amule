@@ -35,7 +35,7 @@ if grep -q ":${AMULE_GID}:" /etc/group; then
     printf "[INIT] Group %s with GID %s will be used as amule group.\n" "${AMULE_GROUP}" "${AMULE_GID}"
 else
     printf "[INIT] Creating group %s with GID %s ...\n" "${AMULE_GROUP}" "${AMULE_GID}"
-    addgroup "${AMULE_GROUP}" -g "${AMULE_GID}"
+    groupadd -g "${AMULE_GID}" "${AMULE_GROUP}"
 fi
 
 AMULE_USER="amule"
@@ -45,7 +45,7 @@ if grep -q ":${AMULE_UID}:" /etc/passwd; then
     printf "[INIT] User %s with UID %s will be used as amule user.\n" "${AMULE_USER}" "${AMULE_UID}"
 else
     printf "[INIT] Creating user %s with UID %s ...\n" "${AMULE_USER}" "${AMULE_UID}"
-    adduser "${AMULE_USER}" -u "${AMULE_UID}" -G "${AMULE_GROUP}" -s "/sbin/nologin" -h "/home/amule" -H -D -g "First Last,RoomNumber,WorkPhone,HomePhone"
+    useradd -u "${AMULE_UID}" -g "${AMULE_GROUP}" -s "/usr/sbin/nologin" -d "/home/amule" -M -N -c "First Last,RoomNumber,WorkPhone,HomePhone" "${AMULE_USER}"
 fi
 
 if [ ! -d "${AMULE_INCOMING}" ]; then
@@ -141,7 +141,7 @@ ToolTipDelay=1
 ShowOverhead=0
 ShowInfoOnCatTabs=1
 VerticalToolbar=0
-GeoIPEnabled=1
+GeoIPEnabled=0
 VideoPlayer=
 StatGraphsInterval=3
 statsInterval=30
@@ -183,7 +183,7 @@ DropSlowSources=0
 KadNodesUrl=${KAD_NODES_DAT_URL}
 Ed2kServersUrl=https://upd.emule-security.org/server.met
 ShowRatesOnTitle=0
-GeoLiteCountryUpdateUrl=http://mailfud.org/geoip-legacy/GeoIP.dat.gz
+GeoLiteCountryUpdateUrl=
 StatsServerName=Shorty's ED2K stats
 StatsServerURL=https://ed2k.shortypower.org/?hash=
 CreateSparseFiles=1

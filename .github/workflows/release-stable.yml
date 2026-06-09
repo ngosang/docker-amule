@@ -13,10 +13,12 @@ jobs:
     strategy:
       matrix:
         include:
+          - platform: linux/386
+            arch: 386
           - platform: linux/amd64
             arch: amd64
-          - platform: linux/arm/v6
-            arch: armv6
+          - platform: linux/arm/v5
+            arch: armv5
           - platform: linux/arm/v7
             arch: armv7
           - platform: linux/arm64/v8

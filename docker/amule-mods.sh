@@ -8,8 +8,10 @@ mod_auto_restart() {
         # Auto restart amuled process. The cron scheduler is configurable.
         printf "[MOD_AUTO_RESTART] aMule will be restarted automatically (cron %s)... You can disable this mod with MOD_AUTO_RESTART_ENABLED=false\n" "$MOD_AUTO_RESTART_CRON"
         # Avoid adding several times the same cron task when the container restarts
-        if ! grep -q "MOD_AUTO_RESTART" "/etc/crontabs/root" ; then
-            printf "%s /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && s6-svc -t /etc/services.d/amuled'\n" "$MOD_AUTO_RESTART_CRON" >> /etc/crontabs/root
+        CRON_FILE="/etc/cron.d/amule-auto-restart"
+        if [ ! -f "$CRON_FILE" ]; then
+            printf "%s root /bin/sh -c 'echo \"[MOD_AUTO_RESTART] Restarting aMule...\" && s6-svc -t /etc/services.d/amuled > /proc/1/fd/1 2>&1'\n" "$MOD_AUTO_RESTART_CRON" > "$CRON_FILE"
+            chmod 0644 "$CRON_FILE"
         fi
     fi
 }
