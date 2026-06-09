@@ -185,8 +185,14 @@ As workaround, we have implemented a cron scheduler to restart aMule from time t
 
 ### Auto share mod
 
-By default, aMule only shares "incoming" directory and shared folders cannot be selected in the Web UI
+By default, aMule only shares the "incoming" directory and shared folders cannot be selected in the Web UI.
 
-We have added this option in the Docker image. The configuration is updated when the container starts. Note that sub-directories are also shared!
+We have added this option in the Docker image. The configuration is updated when the container starts. It writes the listed directories as recursive shared roots (`shareddir-recursive.dat`), so aMule shares each directory together with **all of its sub-directories**. New sub-directories created later are shared automatically too (see `AutoRescanSharedDirs` below). aMule regenerates `shareddir.dat` (the union of all shared directories) on startup.
 * `MOD_AUTO_SHARE_ENABLED=true`
 * `MOD_AUTO_SHARE_DIRECTORIES=/downloads/incoming;/my_movies` => List of directories separated by semicolon ';'. Subdirectories will be shared too.
+
+#### Shared directories scanning
+
+These options are enabled by default in the generated `amule.conf` and control how aMule scans the shared directories. You can change them by editing `amule.conf` in the config volume.
+* `AutoRescanSharedDirs=1` => aMule watches the shared directories and detects changes (new files and sub-directories) automatically, without a manual "Reload shared files". New sub-directories under a recursive root are shared on the fly. Set to `0` to disable the watcher.
+* `FollowSymlinksInShares=1` => aMule follows symbolic links while scanning the shared directories. Set to `0` to skip symlinked files and directories entirely.

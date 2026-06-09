@@ -13,6 +13,7 @@
 * Remove man pages from the Docker image. You can use 'command --help' to get similar information
 * Remove fix Kad graph mod (MOD_FIX_KAD_GRAPH). Bug fixed upstream in aMule 3.0.0
 * Remove fix Kad bootstrap mod (MOD_FIX_KAD_BOOTSTRAP). Bug fixed upstream in aMule 3.0.0
+* Simplify auto share mod (MOD_AUTO_SHARE) to use aMule 3.0.0 native recursive shares (shareddir-recursive.dat)
 * Update aMule repository URL to https://github.com/amule-org/amule
 * Build aMule from source using CMake (new upstream build system)
 * Optimize build time by performing shallow git clones
