@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Build aMule from source (AMULE_REF can be a tag, branch, or commit SHA)
 ARG AMULE_REF=3.0.0
 RUN git init -q amule-src && \
-    git -C amule-src fetch --depth 1 https://github.com/amule-org/amule.git ${AMULE_REF} && \
+    git -C amule-src fetch --depth 1 --tags https://github.com/amule-org/amule.git ${AMULE_REF} && \
     git -C amule-src checkout -q FETCH_HEAD && \
     # libatomic1 only ships libatomic.so.1; find_library(atomic) needs the unversioned symlink
     so="$(find /usr/lib -name 'libatomic.so.1' -print -quit)" && [ -n "$so" ] && ln -sf "$(basename "$so")" "${so%.1}" ; \

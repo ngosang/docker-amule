@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # not optimized, making them suitable for gdb / heaptrack analysis
 ARG AMULE_REF=master
 RUN git init -q amule-src && \
-    git -C amule-src fetch --depth 1 https://github.com/amule-org/amule.git ${AMULE_REF} && \
+    git -C amule-src fetch --depth 1 --tags https://github.com/amule-org/amule.git ${AMULE_REF} && \
     git -C amule-src checkout -q FETCH_HEAD && \
     # libatomic1 only ships libatomic.so.1; find_library(atomic) needs the unversioned symlink
     so="$(find /usr/lib -name 'libatomic.so.1' -print -quit)" && [ -n "$so" ] && ln -sf "$(basename "$so")" "${so%.1}" ; \
@@ -70,11 +70,11 @@ ENTRYPOINT ["/home/amule/entrypoint.sh"]
 # HELP
 #
 # => Build Docker image (stable release, AMULE_REF defaults to the latest stable tag)
-# docker build -t ngosang/amule:debug --progress=plain .
+# docker build -f Dockerfile.debug -t ngosang/amule:debug --progress=plain .
 #
 # => Build a debug image from a specific aMule branch or commit
-# docker build --build-arg AMULE_REF=<branch-or-commit> -t ngosang/amule:debug --progress=plain .
+# docker build -f Dockerfile.debug --build-arg AMULE_REF=<branch-or-commit> -t ngosang/amule:debug --progress=plain .
 #
 # => Build multi-arch Docker image
 # docker buildx create --use
-# docker buildx build -t ngosang/amule:debug --progress=plain --platform linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/riscv64,linux/s390x .
+# docker buildx build -f Dockerfile.debug -t ngosang/amule:debug --progress=plain --platform linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/riscv64,linux/s390x .
