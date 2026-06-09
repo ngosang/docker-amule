@@ -23,7 +23,6 @@ fi
 AMULE_HOME=/home/amule/.aMule
 AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
-KAD_NODES_DAT_URL="https://upd.emule-security.org/nodes.dat"
 
 printf "[INIT] Starting aMule configuration ...\n"
 
@@ -153,7 +152,7 @@ SeeShare=2
 FilterLanIPs=1
 ParanoidFiltering=1
 IPFilterAutoLoad=1
-IPFilterURL=http://upd.emule-security.org/ipfilter.zip
+IPFilterURL=https://upd.emule-security.org/ipfilter.zip
 FilterLevel=127
 IPFilterSystem=0
 FilterMessages=1
@@ -180,7 +179,7 @@ AllcatType=0
 ShowAllNotCats=0
 SmartIdState=0
 DropSlowSources=0
-KadNodesUrl=${KAD_NODES_DAT_URL}
+KadNodesUrl=https://upd.emule-security.org/nodes.dat
 Ed2kServersUrl=https://upd.emule-security.org/server.met
 ShowRatesOnTitle=0
 GeoLiteCountryUpdateUrl=
@@ -261,8 +260,6 @@ CoreEnabled=0
 CoreCommand=
 GUIEnabled=0
 GUICommand=
-[HTTPDownload]
-URL_1=http://upd.emule-security.org/ipfilter.zip
 EOM
     printf "[INIT] File %s successfullly generated.\n" "${AMULE_CONF}"
 else

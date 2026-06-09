@@ -16,22 +16,6 @@ mod_auto_restart() {
     fi
 }
 
-mod_fix_kad_bootstrap() {
-    MOD_FIX_KAD_BOOTSTRAP_ENABLED=${MOD_FIX_KAD_BOOTSTRAP_ENABLED:-"true"}
-    if [ "${MOD_FIX_KAD_BOOTSTRAP_ENABLED}" = "true" ]; then
-        # Fix bug https://github.com/ngosang/docker-amule/issues/33
-        # Download nodes.dat if the file does not exist
-        if [ ! -f "${AMULE_HOME}/nodes.dat" ]; then
-            printf "[MOD_FIX_KAD_BOOTSTRAP] Downloading nodes.dat from %s ... You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n" "${KAD_NODES_DAT_URL}"
-            curl -s -o "${AMULE_HOME}/nodes.dat" "${KAD_NODES_DAT_URL}"
-            chown "${AMULE_USER}:${AMULE_GROUP}" "${AMULE_HOME}/nodes.dat"
-            printf "[MOD_FIX_KAD_BOOTSTRAP] Downloaded successfully!\n"
-        else
-            printf "[MOD_FIX_KAD_BOOTSTRAP] File nodes.dat already exist. You can disable this mod with MOD_FIX_KAD_BOOTSTRAP_ENABLED=false\n"
-        fi
-    fi
-}
-
 mod_auto_share() {
     MOD_AUTO_SHARE_ENABLED=${MOD_AUTO_SHARE_ENABLED:-"false"}
     MOD_AUTO_SHARE_DIRECTORIES=${MOD_AUTO_SHARE_DIRECTORIES:-"${AMULE_INCOMING}"}

@@ -3,14 +3,16 @@
 ## 3.0.0-1 (2026/06/09)
 
 * Update aMule to 3.0.0 stable release
-* Replace base Docker image with Debian trixie-slim (previously Alpine Linux)
+* Replace Alpine Linux base Docker image with Debian trixie-slim (required for debug and backtraces)
 * Update supported architectures: add linux/386 and linux/arm/v5, drop linux/arm/v6
 * Enable symbolized crash backtraces. When aMule crashes you will see function names in the log traces
+* Install ca-certificates for HTTPS downloads (nodes.dat, server.met, ipfilter.zip)
 * Remove UPnP support. It only works with Docker host networking (network_mode: host)
 * Remove GeoIP/IP2Country support. This remote GUI (amulegui) keep working (resolves country flags client-side)
 * Update default amule.conf and remote.conf templates to match aMule 3.0.0 defaults (new keys, updated values and HTTPS URLs)
-* Remove man pages from the Docker image. You can use `command --help` to get similar information
+* Remove man pages from the Docker image. You can use 'command --help' to get similar information
 * Remove fix Kad graph mod (MOD_FIX_KAD_GRAPH). Bug fixed upstream in aMule 3.0.0
+* Remove fix Kad bootstrap mod (MOD_FIX_KAD_BOOTSTRAP). Bug fixed upstream in aMule 3.0.0
 * Update aMule repository URL to https://github.com/amule-org/amule
 * Build aMule from source using CMake (new upstream build system)
 * Optimize build time by performing shallow git clones
