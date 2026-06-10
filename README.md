@@ -94,11 +94,11 @@ services:
       - MOD_AUTO_SHARE_ENABLED=false
       - MOD_AUTO_SHARE_DIRECTORIES=/downloads/incoming;/my_movies
     ports:
-      - "4711:4711" # web ui
-      - "4712:4712" # remote gui, webserver, cmd ...
-      - "4662:4662" # ed2k tcp
-      - "4665:4665/udp" # ed2k global search udp (tcp port +3)
-      - "4672:4672/udp" # ed2k udp
+      - "4711:4711" # Web interface (amuleweb)
+      - "4712:4712" # External connections (amulegui, amulecmd, amuleweb)
+      - "4662:4662" # ED2K client-to-client TCP (required for High ID)
+      - "4665:4665/udp" # ED2K server UDP (global searches, TCP port +3)
+      - "4672:4672/udp" # Extended eMule protocol and Kademlia UDP
     volumes:
       - <fill_amule_configuration_path>:/home/amule/.aMule
       - <fill_amule_downloads_path>:/downloads
@@ -139,11 +139,11 @@ Container images are configured using parameters passed at runtime (such as thos
 
 | Parameter | Function |
 | :----: | --- |
-| `-p 4711` | Web UI port. |
-| `-p 4712` | Remote gui, webserver, cmd port. |
-| `-p 4662` | ED2K TCP port (must be open to Internet). |
-| `-p 4665/udp` | ED2K global search UDP port (tcp port +3) (must be open to Internet). |
-| `-p 4672/udp` | ED2K UDP port (must be open to Internet). |
+| `-p 4711` | Web interface port (amuleweb). |
+| `-p 4712` | External connections port (amulegui, amulecmd, amuleweb). |
+| `-p 4662` | ED2K client-to-client TCP (required for High ID). It must be open to the Internet. |
+| `-p 4665/udp` | ED2K server UDP (global searches, TCP port +3). It must be open to the Internet. |
+| `-p 4672/udp` | Extended eMule protocol and Kademlia UDP. It must be open to the Internet. |
 | `-e PUID=1000` | for UserID - see below for explanation. |
 | `-e PGID=1000` | for GroupID - see below for explanation. |
 | `-e UMASK=0002` | Set the umask for file creation. Optional, defaults to `0002` (files: 664, dirs: 775, group write access). |
