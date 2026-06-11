@@ -1,0 +1,67 @@
+Fix first-run wipe of pre-seeded shareddir*.dat files
+
+On the very first start (no preferences.dat yet) CPreferences's
+constructor calls Save() to persist the freshly generated userhash.
+Save() -> SaveSharedFolders() then writes the three shareddir*.dat
+files from the in-memory lists, which are still empty because
+ReloadSharedFolders() only runs afterwards. This wipes any
+shareddir-recursive.dat pre-seeded by an external script (e.g. this
+image's MOD_AUTO_SHARE entrypoint) before aMule ever reads it.
+
+The previous workaround (chmod 444 on the pre-seeded file) blocked the
+wipe but made every later legitimate SaveSharedFolders() fail with
+"error 13: Permission denied" (startup reconciliation, the shared-dir
+watcher persisting auto-added subdirectories, EC/WebUI saves).
+
+Fix: SaveSharedFolders() is a no-op until ReloadSharedFolders() has
+loaded the on-disk files once.
+
+Applies to amule-org/amule d6e3cdca69d42a8db0ae6790dfb6a92133f41a2e.
+Drop this patch once the fix lands upstream.
+
+diff --git a/src/Preferences.cpp b/src/Preferences.cpp
+index 31b33ac42..ad95d311f 100644
+--- a/src/Preferences.cpp
++++ b/src/Preferences.cpp
+@@ -1538,6 +1538,14 @@ void CPreferences::Save()
+ void CPreferences::SaveSharedFolders()
+ {
+ 	#ifndef CLIENT_GUI
++	// Never write before ReloadSharedFolders() has loaded the on-disk
++	// files: the constructor's first-run Save() (persisting the freshly
++	// generated userhash) happens before they are loaded, and writing
++	// the still-empty lists would wipe shareddir*.dat files pre-seeded
++	// by external scripts (e.g. Docker entrypoints).
++	if (!m_sharedFoldersLoaded) {
++		return;
++	}
+ 	// Canonical sources of truth: shareddir-explicit.dat (user-added
+ 	// non-recursive roots) and shareddir-recursive.dat (user-marked
+ 	// recursive roots). Older versions of aMule know nothing about
+@@ -2021,6 +2029,7 @@ void CPreferences::ReloadSharedFolders()
+ 	// Persist all three files so a crash mid-session doesn't leave
+ 	// reconciled state un-written, and so the union is up-to-date
+ 	// for any external reader.
++	m_sharedFoldersLoaded = true;
+ 	SaveSharedFolders();
+ #endif
+ }
+diff --git a/src/Preferences.h b/src/Preferences.h
+index 07d2a4f9e..d41f65cbf 100644
+--- a/src/Preferences.h
++++ b/src/Preferences.h
+@@ -403,6 +403,14 @@ public:
+ 	// intent in this file.
+ 	PathList shareddir_recursive_list;
+ 
++	// False until ReloadSharedFolders() has loaded the on-disk
++	// shareddir*.dat files once. SaveSharedFolders() is a no-op while
++	// false: the constructor's first-run Save() (persisting the freshly
++	// generated userhash) runs before the lists are loaded and would
++	// otherwise overwrite files pre-seeded by external scripts (e.g.
++	// Docker entrypoints) with empty ones.
++	bool m_sharedFoldersLoaded = false;
++
+ 	wxArrayString addresses_list;
+ 
+ 	static bool		AutoConnectStaticOnly()		{ return s_autoconnectstaticonly; }

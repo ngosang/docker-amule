@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Fix MOD_AUTO_SHARE "error 13: Permission denied" log errors on shareddir-recursive.dat. The file is no longer made read-only: aMule is patched (patches/001-no-shareddir-write-before-load.patch) so it does not wipe pre-seeded shareddir*.dat files on the very first run, and it can now persist auto-shared sub-directories and WebUI/remote share changes
+
 ## 3.0.0-1 (2026/06/09)
 
 * **Major release:** Please read this changelog carefully before upgrading. It is strongly recommended to back up your aMule config folder and to create new `amule.conf` and `remote.conf` files with default values.

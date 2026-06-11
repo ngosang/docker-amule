@@ -49,9 +49,10 @@ mod_auto_share() {
         # so aMule regenerates it from the recursive roots.
         rm -f "${AMULE_HOME}/shareddir.dat"
         chown "${AMULE_USER}:${AMULE_GROUP}" "$SHAREDDIR_CONF"
-        # Read-only: on the very first run aMule rewrites the shared-dir files (empty) while
-        # persisting its initial preferences, before loading them. Keeping this file read-only
-        # prevents that wipe, so aMule reads our recursive roots and regenerates shareddir.dat.
-        chmod 444 "$SHAREDDIR_CONF"
+        # Writable by aMule: it rewrites this file to persist auto-shared sub-directories and
+        # WebUI/remote changes. aMule no longer wipes it before loading on the very first run
+        # (see patches/001-no-shareddir-write-before-load.patch). This also restores write
+        # permissions on volumes created by older image versions, which used chmod 444 here.
+        chmod 644 "$SHAREDDIR_CONF"
     fi
 }
