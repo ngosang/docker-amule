@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.0-2 (2026/06/20)
+
+* Configure the C.UTF-8 locale to handle non-ASCII paths correctly
+* Rebuild with latest base Docker image
+
 ## 3.0.0-1 (2026/06/09)
 
 * **Major release:** Please read this changelog carefully before upgrading. It is strongly recommended to back up your aMule config folder and to create new `amule.conf` and `remote.conf` files with default values.

@@ -58,6 +58,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         if ldd "/usr/bin/$bin" | grep -q "not found"; then echo "ERROR: missing shared libraries in $bin:"; ldd "/usr/bin/$bin"; exit 1; fi; \
     done
 
+# Use the built-in C.UTF-8 locale so amuled handles non-ASCII paths correctly
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
 # Add entrypoint and S6 services
 COPY --chmod=755 docker/entrypoint.sh docker/amule-config.sh docker/amule-mods.sh /home/amule/
 COPY --chmod=755 docker/services.d/ /etc/services.d/
