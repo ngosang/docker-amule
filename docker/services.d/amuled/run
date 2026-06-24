@@ -1,10 +1,4 @@
 #!/bin/sh
 
 printf "[SUPERVISOR] Starting amuled service ...\n"
-# Note: we intentionally do NOT pass -o (log to stdout). amuled converts its
-# stdout log with the C-library locale (wxConvLibc) and never calls
-# setlocale(), so in this minimal (C/POSIX) locale image every log line that
-# contains a non-ASCII path (accented / non-UTF-8 file names) comes out
-# corrupted on stdout. The on-disk logfile is written as UTF-8 and stays clean,
-# so the amuled-log service streams that file to stdout instead.
-exec setpriv --reuid "${AMULE_UID}" --regid "${AMULE_GID}" --init-groups amuled -c "${AMULE_HOME}"
+exec setpriv --reuid "${AMULE_UID}" --regid "${AMULE_GID}" --init-groups amuled -c "${AMULE_HOME}" -o
