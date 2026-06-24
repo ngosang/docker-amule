@@ -3,8 +3,9 @@
 ## 3.0.1-1 (2026/06/25)
 
 * Update aMule to 3.0.1 stable release
-* Fix shared directories permission error (fixed upstream)
-* Fix corrupted log output for non-ASCII paths (fixed upstream)
+* Re-enable UPnP support. Requires network_mode: host
+* Fix shared directories permission error. Fixed upstream
+* Fix corrupted log output for non-ASCII paths. Fixed upstream
 * Rebuild with latest base Docker image
 
 ## 3.0.0-2 (2026/06/20)

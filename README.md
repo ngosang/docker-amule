@@ -194,6 +194,39 @@ services:
 Then edit the `amule.conf` file and set `Template=MyTheme`. Leave `Template=` empty to
 use the default theme.
 
+## UPnP
+
+> [!NOTE]
+> The normal configuration uses the default bridge networking with the `ports:` mappings shown above, forwarding those ports on your router manually if needed. Only use UPnP if your router supports it and you specifically want automatic port forwarding, or if you are stuck with a **Low ID** and cannot forward ports by hand.
+
+aMule is compiled with UPnP support, which lets aMule automatically open the required ports on a UPnP-capable router so you get a **High ID** without manually forwarding ports.
+
+UPnP needs direct access to the host network to talk to the router, so it only works when the container runs with **host networking**. Set `network_mode: host` and **do not** add a `ports:` section: in host networking the container shares the host network stack directly, so the `ports:` mappings are ignored.
+
+```yaml
+---
+services:
+  amule:
+    image: ngosang/amule
+    container_name: amule
+    network_mode: host   # required for UPnP (do not add a `ports:` section)
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - GUI_PWD=<fill_password>
+      - WEBUI_PWD=<fill_password>
+    volumes:
+      - <fill_amule_configuration_path>:/home/amule/.aMule
+      - <fill_amule_downloads_path>:/downloads
+    restart: unless-stopped
+```
+
+You also have to enable UPnP in aMule itself, then restart the container. In `amule.conf` set `UPnPEnabled=1`, which forwards the eD2k TCP port (4662) and the UDP ports (4665, 4672). Optionally `UPnPECEnabled=1` forwards the External Connections port and `UPnPWebServerEnabled=1` forwards the Web UI port.
+
+> [!NOTE]
+> `UPnPTCPPort` (default `50000`) is **not** a forwarded port — it is the local port aMule's UPnP stack uses to communicate with the router. Leave it at the default unless it conflicts with another service. If you run a local firewall, allow local TCP `50000` and UDP `1900`.
+
 ## Modifications
 
 The Docker image includes some unofficial features. All of them are optional.

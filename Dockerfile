@@ -8,7 +8,7 @@ WORKDIR /tmp
 # libatomic1: required for 32-bit targets (386, arm/v5, arm/v7)
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential cmake make git binutils-dev ca-certificates pkg-config libatomic1 \
-        libboost-dev libcrypto++-dev libglib2.0-dev libreadline-dev libwxgtk3.2-dev zlib1g-dev libpng-dev \
+        libboost-dev libcrypto++-dev libglib2.0-dev libreadline-dev libwxgtk3.2-dev zlib1g-dev libpng-dev libupnp-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Build aMule from source (AMULE_REF can be a tag, branch, or commit SHA)
@@ -28,7 +28,7 @@ RUN git init -q amule-src && \
         -DBUILD_WEBSERVER=YES \
         -DBUILD_ALCC=YES \
         -DENABLE_IP2COUNTRY=NO \
-        -DENABLE_UPNP=NO \
+        -DENABLE_UPNP=YES \
         -DENABLE_NLS=NO && \
     cmake --build amule-build -j"$(nproc)" && \
     cmake --install amule-build && \
@@ -46,7 +46,7 @@ COPY --from=builder /usr/share/amule /usr/share/amule
 
 # Install runtime dependencies and remove unnecessary locale files
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libcrypto++8t64 libreadline8t64 libgcc-s1 libstdc++6 libpng16-16t64 libwxbase3.2-1t64 libglib2.0-0t64 \
+        libcrypto++8t64 libreadline8t64 libgcc-s1 libstdc++6 libpng16-16t64 libwxbase3.2-1t64 libglib2.0-0t64 libupnp17t64 \
         libatomic1 libbinutils ca-certificates curl tzdata procps pwgen s6 cron systemd-standalone-sysusers \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \
     # Check binaries are OK (fail the build if any shared library is missing)
