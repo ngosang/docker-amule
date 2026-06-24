@@ -3,6 +3,7 @@
 ## 3.0.1-1 (2026/06/25)
 
 * Update aMule to 3.0.1 stable release
+* Fix shared directories permission error (fixed upstream)
 * Rebuild with latest base Docker image
 
 ## 3.0.0-2 (2026/06/20)
