@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Build aMule from source (AMULE_REF can be a tag, branch, or commit SHA)
-ARG AMULE_REF=3.0.0
+ARG AMULE_REF=3.0.1
 RUN git init -q amule-src && \
     git -C amule-src fetch --depth 1 --tags https://github.com/amule-org/amule.git ${AMULE_REF} && \
     git -C amule-src checkout -q FETCH_HEAD && \
