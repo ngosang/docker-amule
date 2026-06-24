@@ -20,6 +20,10 @@ RUN git init -q amule-src && \
     git -C amule-src checkout -q FETCH_HEAD && \
     # libatomic1 only ships libatomic.so.1; find_library(atomic) needs the unversioned symlink
     so="$(find /usr/lib -name 'libatomic.so.1' -print -quit)" && [ -n "$so" ] && ln -sf "$(basename "$so")" "${so%.1}" ; \
+    # Debian's libupnp-dev ships a broken UPNP.cmake (non-existent /usr/COMPONENT
+    # include path) that breaks the build on non-x86_64/aarch64 arches; drop it so
+    # aMule falls back to pkg-config for libupnp.
+    rm -rf /usr/lib/*/cmake/UPNP /usr/lib/cmake/UPNP /usr/lib64/cmake/UPNP ; \
     cmake -B amule-build amule-src \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=Debug \
