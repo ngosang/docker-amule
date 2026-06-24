@@ -2,6 +2,7 @@
 
 ## 3.0.1-1 (2026/06/25)
 
+* Note: This version contains many fixes in the aMule WebUI. Fixed upstream
 * Update aMule to 3.0.1 stable release
 * Re-enable UPnP support. Requires network_mode: host
 * Fix shared directories permission error. Fixed upstream
