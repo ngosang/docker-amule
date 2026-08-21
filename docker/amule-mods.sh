@@ -48,6 +48,7 @@ mod_auto_share() {
         # Remove the legacy union file (older image versions enumerated sub-directories here)
         # so aMule regenerates it from the recursive roots.
         rm -f "${AMULE_HOME}/shareddir.dat"
-        chown "${AMULE_USER}:${AMULE_GROUP}" "$SHAREDDIR_CONF"
+        # fix_permissions comes from amule-config.sh, sourced first by entrypoint.sh
+        fix_permissions "$SHAREDDIR_CONF"
     fi
 }

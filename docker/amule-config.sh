@@ -314,9 +314,16 @@ if [ -n "${WEBUI_PWD}" ]; then
     sed -i "s/^AdminPassword=.*/AdminPassword=${AMULE_WEBUI_ENCODED_PWD}/" "${REMOTE_CONF}"
 fi
 
-# Set permissions
-chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_HOME}"
-if [ "${FIX_PERMISSIONS:-true}" = "true" ]; then
-    chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_INCOMING}"
-    chown -R "${AMULE_UID}:${AMULE_GID}" "${AMULE_TEMP}"
-fi
+# Set permissions. Every ownership change in the image goes through this function, so
+# FIX_PERMISSIONS=false disables all of them, and a failure never stops the container:
+# on network mounts (NFS, CIFS/SMB) chown is usually rejected and the ownership comes
+# from the export or from the mount options instead
+fix_permissions() {
+    [ "${FIX_PERMISSIONS:-true}" = "true" ] || return 0
+    chown -R "${AMULE_UID}:${AMULE_GID}" "$1" 2>/dev/null && return 0
+    printf "[INIT] WARNING: could not change the ownership of %s. This is expected on NFS or CIFS/SMB mounts: set PUID/PGID to match the share, or set FIX_PERMISSIONS=false to skip this step and silence this warning.\n" "$1"
+}
+
+fix_permissions "${AMULE_HOME}"
+fix_permissions "${AMULE_INCOMING}"
+fix_permissions "${AMULE_TEMP}"

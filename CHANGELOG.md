@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.1-2 (upcoming)
+
+* Fix directories chown error on network mounts (NFS, CIFS/SMB). Now a warning is shown at startup instead of an error. Check the `FIX_PERMISSIONS` environment variable
+
 ## 3.0.1-1 (2026/06/25)
 
 * Note: This version contains many fixes in the aMule WebUI. Fixed upstream
