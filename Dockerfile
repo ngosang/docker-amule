@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Build aMule from source (AMULE_REF can be a tag, branch, or commit SHA)
-ARG AMULE_REF=3.0.1
+ARG AMULE_REF=3.1.0
 RUN git init -q amule-src && \
     git -C amule-src fetch --depth 1 --tags https://github.com/amule-org/amule.git ${AMULE_REF} && \
     git -C amule-src checkout -q FETCH_HEAD && \
@@ -30,6 +30,7 @@ RUN git init -q amule-src && \
         -DBUILD_DAEMON=YES \
         -DBUILD_AMULECMD=YES \
         -DBUILD_WEBSERVER=YES \
+        -DBUILD_AMULEAPI=YES \
         -DBUILD_ALCC=YES \
         -DENABLE_IP2COUNTRY=NO \
         -DENABLE_UPNP=YES \
@@ -45,7 +46,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="ngosang@hotmail.es"
 
 # Copy binaries and Web UI
-COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
+COPY --from=builder /usr/bin/alcc /usr/bin/amuleapi /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
 COPY --from=builder /usr/share/amule /usr/share/amule
 
 # Install runtime dependencies and remove unnecessary locale files
@@ -54,7 +55,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libatomic1 libbinutils ca-certificates curl tzdata procps pwgen s6 cron systemd-standalone-sysusers \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \
     # Check binaries are OK (fail the build if any shared library is missing)
-    for bin in alcc amulecmd amuled amuleweb ed2k; do \
+    for bin in alcc amuleapi amulecmd amuled amuleweb ed2k; do \
         if ldd "/usr/bin/$bin" | grep -q "not found"; then echo "ERROR: missing shared libraries in $bin:"; ldd "/usr/bin/$bin"; exit 1; fi; \
     done
 

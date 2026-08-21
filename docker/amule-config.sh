@@ -23,6 +23,8 @@ fi
 AMULE_HOME=/home/amule/.aMule
 AMULE_CONF=${AMULE_HOME}/amule.conf
 REMOTE_CONF=${AMULE_HOME}/remote.conf
+AMULEAPI_CONF=${AMULE_HOME}/amuleapi.conf
+AMULEAPI_PASSWORDS=${AMULE_HOME}/amuleapi-passwords
 
 printf "[INIT] Starting aMule configuration ...\n"
 
@@ -95,7 +97,7 @@ Address=
 Autoconnect=1
 MaxSourcesPerFile=300
 MaxConnections=500
-MaxConnectionsPerFiveSeconds=20
+MaxConnectionsPerFiveSeconds=50
 RemoveDeadServer=1
 DeadServerRetry=3
 ServerKeepAliveTimeout=0
@@ -116,7 +118,7 @@ IncomingDir=${AMULE_INCOMING}
 ICH=1
 AICHTrust=0
 CheckDiskspace=1
-MinFreeDiskSpace=1
+MinFreeDiskSpace=500
 AddNewFilesPaused=0
 PreviewPrio=0
 ManualHighPrio=0
@@ -144,8 +146,8 @@ GeoIPEnabled=0
 VideoPlayer=
 StatGraphsInterval=3
 statsInterval=30
-DownloadCapacity=300
-UploadCapacity=100
+DownloadCapacity=12500
+UploadCapacity=2500
 StatsAverageMinutes=5
 VariousStatisticsMaxValue=100
 SeeShare=2
@@ -167,7 +169,6 @@ CommentFilter=
 ShareHiddenFiles=0
 AutoRescanSharedDirs=1
 FollowSymlinksInShares=1
-AutoSortDownloads=0
 NewVersionCheck=0
 AdvancedSpamFilter=1
 MessageUseCaptchas=1
@@ -210,6 +211,9 @@ UseSecIdent=1
 IpFilterClients=1
 IpFilterServers=1
 TransmitOnlyUploadingClients=0
+AuthFailureThreshold=10
+AuthFailureWindowSeconds=60
+AuthLockoutSeconds=300
 [WebServer]
 Enabled=0
 Password=${AMULE_WEBUI_ENCODED_PWD}
@@ -222,6 +226,13 @@ UseLowRightsUser=0
 PageRefreshTime=120
 Template=
 Path=amuleweb
+[AmuleApi]
+Enabled=0
+BindAddress=127.0.0.1
+HttpPort=4713
+[MediaMetadata]
+Enabled=0
+FFProbePath=
 [GUI]
 HideOnClose=0
 AppImageIntegrationDeclined=0
@@ -262,6 +273,7 @@ GUIEnabled=0
 GUICommand=
 EOM
     printf "[INIT] File %s successfullly generated.\n" "${AMULE_CONF}"
+    AMULE_CONF_CREATED=true
 else
     printf "[INIT] File %s found. Using existing configuration.\n" "${AMULE_CONF}"
 fi
@@ -295,8 +307,9 @@ else
     printf "[INIT] File %s found. Using existing configuration.\n" "${REMOTE_CONF}"
 fi
 
-# Ensure WebServer is not started by amuled
+# Ensure WebServer and amuleapi are not started by amuled (they run as their own services)
 sed -i '/^\[WebServer\]/,/^\[/{s/^Enabled=.*/Enabled=0/}' "${AMULE_CONF}"
+sed -i '/^\[AmuleApi\]/,/^\[/{s/^Enabled=.*/Enabled=0/}' "${AMULE_CONF}"
 
 # Migrate configs from the removed AmuleWebUI-Reloaded theme to the default theme,
 # unless the user mounted it (or any theme) as an external volume at that path.
@@ -321,6 +334,68 @@ fix_permissions() {
     chown -R "${AMULE_UID}:${AMULE_GID}" "$1" 2>/dev/null && return 0
     printf "[INIT] WARNING: could not change the ownership of %s. This is expected on NFS or CIFS/SMB mounts: set PUID/PGID to match the share, or set FIX_PERMISSIONS=false to skip this step for the download directories.\n" "$1"
 }
+
+# Configure amuleapi (new Web UI + REST API), unless the legacy amuleweb was requested
+if [ "${LEGACY_AMULEWEB_ENABLED}" != "true" ]; then
+    # amuleapi.conf holds the EC password in plaintext (amuleapi hashes it itself), so it
+    # can only be written when GUI_PWD is set or the password was generated in this run
+    if [ ! -f "${AMULEAPI_CONF}" ] && [ -z "${GUI_PWD}" ] && [ "${AMULE_CONF_CREATED}" != "true" ]; then
+        printf "[INIT] ERROR: %s is missing and GUI_PWD is not set.\n" "${AMULEAPI_CONF}"
+        printf "[INIT] amuleapi needs the plaintext Remote GUI (EC) password and it hashes it\n"
+        printf "[INIT] itself, so the MD5 hash in amule.conf cannot be reused. Set GUI_PWD to a\n"
+        printf "[INIT] password of your choice (amulegui/amulecmd clients must then use the new\n"
+        printf "[INIT] one), or set LEGACY_AMULEWEB_ENABLED=true to keep the legacy Web UI.\n"
+        exit 1
+    fi
+
+    if [ ! -f "${AMULEAPI_CONF}" ]; then
+        printf "[INIT] File %s NOT found. Generating new default configuration ...\n" "${AMULEAPI_CONF}"
+        cat > ${AMULEAPI_CONF} <<- EOM
+[Server]
+BindAddress=0.0.0.0
+Port=4711
+AllowCORS=0
+StaticRoot=
+[EC]
+Host=127.0.0.1
+Port=4712
+Password=${AMULE_GUI_PWD}
+Encryption=1
+[Auth]
+LoginFailureWindowSeconds=60
+LoginFailureThreshold=5
+LoginLockoutSeconds=300
+[Streaming]
+EventBusRingCapacity=16384
+EOM
+        printf "[INIT] File %s successfullly generated.\n" "${AMULEAPI_CONF}"
+    else
+        printf "[INIT] File %s found. Using existing configuration.\n" "${AMULEAPI_CONF}"
+        # Keep the EC password in sync with amule.conf. Plaintext, so escape it for sed.
+        if [ -n "${GUI_PWD}" ]; then
+            ESCAPED_GUI_PWD=$(printf '%s' "${AMULE_GUI_PWD}" | sed -e 's/[\\&|]/\\&/g')
+            sed -i "s|^Password=.*|Password=${ESCAPED_GUI_PWD}|" "${AMULEAPI_CONF}"
+        fi
+    fi
+
+    # amuleapi refuses to start, and to run the --set-*-pass below, if any of its files
+    # is readable by group or others. It creates them 600, so this is only for the ones
+    # restored from a backup with looser permissions
+    chmod 600 "${AMULEAPI_CONF}"
+    chmod 600 "${AMULE_HOME}"/amuleapi-* 2>/dev/null || true
+
+    # Web UI passwords. Stored salted and stretched, so they can only be replaced
+    if [ -n "${WEBUI_PWD}" ] || [ ! -f "${AMULEAPI_PASSWORDS}" ]; then
+        if [ -z "${WEBUI_PWD}" ] && [ "${AMULE_CONF_CREATED}" != "true" ]; then
+            printf "[INIT] Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
+        fi
+        amuleapi --config-dir="${AMULE_HOME}" --no-log-file --set-admin-pass="${AMULE_WEBUI_PWD}"
+    fi
+    # Defined but empty disables the read-only guest account, the amuleapi default
+    if [ -n "${WEBUI_GUEST_PWD+x}" ]; then
+        amuleapi --config-dir="${AMULE_HOME}" --no-log-file --set-guest-pass="${WEBUI_GUEST_PWD}"
+    fi
+fi
 
 # The configuration directory is always chowned: amuled runs as PUID/PGID and cannot
 # write there otherwise. FIX_PERMISSIONS only gates the download directories

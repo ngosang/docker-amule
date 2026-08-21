@@ -32,6 +32,7 @@ RUN git init -q amule-src && \
         -DBUILD_DAEMON=YES \
         -DBUILD_AMULECMD=YES \
         -DBUILD_WEBSERVER=YES \
+        -DBUILD_AMULEAPI=YES \
         -DBUILD_ALCC=YES \
         -DENABLE_IP2COUNTRY=NO \
         -DENABLE_UPNP=YES \
@@ -47,7 +48,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="ngosang@hotmail.es"
 
 # Copy binaries and Web UI
-COPY --from=builder /usr/bin/alcc /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
+COPY --from=builder /usr/bin/alcc /usr/bin/amuleapi /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
 COPY --from=builder /usr/share/amule /usr/share/amule
 
 # Install runtime dependencies plus debugging tools (gdb, strace, lsof, heaptrack)
@@ -58,7 +59,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gdb strace lsof heaptrack \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \
     # Check binaries are OK (fail the build if any shared library is missing)
-    for bin in alcc amulecmd amuled amuleweb ed2k; do \
+    for bin in alcc amuleapi amulecmd amuled amuleweb ed2k; do \
         if ldd "/usr/bin/$bin" | grep -q "not found"; then echo "ERROR: missing shared libraries in $bin:"; ldd "/usr/bin/$bin"; exit 1; fi; \
     done
 

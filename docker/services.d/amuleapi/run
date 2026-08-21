@@ -1,0 +1,10 @@
+#!/bin/sh
+
+printf "[SUPERVISOR] Waiting 5 s before starting the web UI service ...\n"
+sleep 5
+if [ "${LEGACY_AMULEWEB_ENABLED}" = "true" ]; then
+    printf "[SUPERVISOR] Starting amuleweb service (legacy Web UI) ...\n"
+    exec setpriv --reuid "${AMULE_UID}" --regid "${AMULE_GID}" --init-groups amuleweb --amule-config-file="${AMULE_CONF}"
+fi
+printf "[SUPERVISOR] Starting amuleapi service ...\n"
+exec setpriv --reuid "${AMULE_UID}" --regid "${AMULE_GID}" --init-groups amuleapi --config-dir="${AMULE_HOME}" --no-log-file

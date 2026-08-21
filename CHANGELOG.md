@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.1.0-1 (upcoming)
+
+* **Breaking change:** the aMule Web UI (amuleweb) is replaced by amuleapi and its new Web UI, on the same port 4711. `GUI_PWD` is now required on existing configurations and the container stops with an explanatory error if it is missing, the old Web UI password is not migrated, and your amulegui/amulecmd clients have to be updated with the new password. Back up your configuration volume and read the "Upgrading to 3.1.0" section of the README before upgrading
+* Update aMule to 3.1.0 stable release
+* Add `LEGACY_AMULEWEB_ENABLED` environment variable to keep the deprecated legacy Web UI (amuleweb) instead of amuleapi. Disabled by default
+* amuleapi also serves the aMule REST API under `/api/v0/`, on the same port and with the same credentials as the Web UI. It is documented in the [aMule repository](https://github.com/amule-org/amule/blob/master/docs/api/REFERENCE.md)
+* Add `WEBUI_GUEST_PWD` environment variable to enable the new read-only guest account of the Web UI. Disabled by default
+* The Web UI settings now live in the new `amuleapi.conf` file of the configuration volume (bind address, port, CORS and static files). The `[WebServer]` section of `amule.conf` is only used in legacy mode
+* UPnP does not forward the Web UI port anymore, amuleapi has no UPnP support. Only relevant with network_mode: host and `UPnPWebServerEnabled=1`
+* Update the default `amule.conf` template to match aMule 3.1.0 defaults (removed keys, updated values and new sections). Only affects new configurations
+
 ## 3.0.1-2 (2026/08/21)
 
 * Fix directories chown error on network mounts (NFS, CIFS/SMB). Now a warning is shown at startup instead of an error. Check the `FIX_PERMISSIONS` environment variable

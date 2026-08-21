@@ -14,8 +14,8 @@ services:
       - MOD_AUTO_SHARE_ENABLED=false
       - MOD_AUTO_SHARE_DIRECTORIES=/downloads/incoming;/my_movies
     ports:
-      - "4711:4711" # Web interface (amuleweb)
-      - "4712:4712" # External connections (amulegui, amulecmd, amuleweb)
+      - "4711:4711" # Web UI and REST API (amuleapi)
+      - "4712:4712" # External connections (amuleapi, amulegui, amulecmd)
       - "4662:4662" # ED2K client-to-client TCP (required for High ID)
       - "4665:4665/udp" # ED2K server UDP (global searches, TCP port +3)
       - "4672:4672/udp" # Extended eMule protocol and Kademlia UDP
