@@ -194,6 +194,12 @@ services:
 Then edit the `amule.conf` file and set `Template=MyTheme`. Leave `Template=` empty to
 use the default theme.
 
+> [!IMPORTANT]
+> Stop the container before editing `amule.conf`. aMule keeps the configuration in memory
+> and rewrites the whole file on shutdown, so any change made while the container is
+> running is lost on the next restart. The theme directory must also contain `login.php`
+> at its root, otherwise aMule silently falls back to the default theme.
+
 ## UPnP
 
 > [!NOTE]
