@@ -1,8 +1,9 @@
 # Changelog
 
-## 3.0.1-2 (upcoming)
+## 3.0.1-2 (2026/08/21)
 
 * Fix directories chown error on network mounts (NFS, CIFS/SMB). Now a warning is shown at startup instead of an error. Check the `FIX_PERMISSIONS` environment variable
+* Rebuild with latest base Docker image
 
 ## 3.0.1-1 (2026/06/25)
 
