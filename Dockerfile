@@ -11,6 +11,35 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libboost-dev libcrypto++-dev libmaxminddb-dev libglib2.0-dev libreadline-dev libwxgtk3.2-dev zlib1g-dev libpng-dev libupnp-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Build a minimal ffprobe from source (~3 MB). aMule uses it to extract length, bitrate and
+# codec from shared media files. The Debian ffmpeg package would add ~470 MB, so everything
+# is disabled except the demuxers, parsers and the file protocol that ffprobe needs to read
+# container metadata: no decoders, no encoders, no muxers, no filters, no network
+ARG FFMPEG_REF=n8.0
+RUN git init -q ffmpeg-src && \
+    git -C ffmpeg-src fetch --depth 1 https://github.com/FFmpeg/FFmpeg.git ${FFMPEG_REF} && \
+    git -C ffmpeg-src checkout -q FETCH_HEAD && \
+    cd ffmpeg-src && \
+    ./configure \
+        --prefix=/usr \
+        --disable-autodetect \
+        --disable-everything \
+        --disable-doc \
+        --disable-debug \
+        --disable-network \
+        --disable-programs \
+        --disable-x86asm \
+        --enable-ffprobe \
+        --enable-demuxers \
+        --enable-parsers \
+        --enable-protocol=file \
+        --enable-zlib \
+        --enable-small && \
+    make -j"$(nproc)" && \
+    make install && \
+    strip /usr/bin/ffprobe && \
+    rm -rf /tmp/*
+
 # Build aMule from source (AMULE_REF can be a tag, branch, or commit SHA)
 ARG AMULE_REF=3.1.0
 RUN git init -q amule-src && \
@@ -42,7 +71,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="ngosang@hotmail.es"
 
 # Copy binaries and Web UI
-COPY --from=builder /usr/bin/alcc /usr/bin/amuleapi /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
+COPY --from=builder /usr/bin/alcc /usr/bin/amuleapi /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/ffprobe /usr/bin/
 COPY --from=builder /usr/share/amule /usr/share/amule
 
 # Install runtime dependencies and remove unnecessary locale files
@@ -51,7 +80,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libatomic1 libbinutils ca-certificates curl tzdata procps pwgen s6 cron systemd-standalone-sysusers \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \
     # Check binaries are OK (fail the build if any shared library is missing)
-    for bin in alcc amuleapi amulecmd amuled amuleweb ed2k; do \
+    for bin in alcc amuleapi amulecmd amuled amuleweb ed2k ffprobe; do \
         if ldd "/usr/bin/$bin" | grep -q "not found"; then echo "ERROR: missing shared libraries in $bin:"; ldd "/usr/bin/$bin"; exit 1; fi; \
     done
 

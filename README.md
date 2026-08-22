@@ -97,6 +97,11 @@ Country flags are enabled by default. aMule downloads the free
 the configuration volume and refreshes it monthly, no account needed. Disable it or pick
 another source in *Preferences -> IP2Country*.
 
+Media metadata extraction is enabled by default. aMule runs the bundled `ffprobe` on each
+shared audio and video file to fill in the Length, Bitrate and Codec other clients see in
+their search results. The first scan of a large library takes a while, one probe per file in
+a background thread. Disable it in *Preferences -> Files -> Media metadata extraction*.
+
 The previous Web UI (`amuleweb`) is deprecated and will be removed. It is still available
 as a temporary fallback, see [Legacy Web UI (amuleweb)](#legacy-web-ui-amuleweb).
 

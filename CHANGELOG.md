@@ -11,6 +11,7 @@
 * UPnP does not forward the Web UI port anymore, amuleapi has no UPnP support. Only relevant with network_mode: host and `UPnPWebServerEnabled=1`
 * Update the default `amule.conf` template to match aMule 3.1.0 defaults (removed keys, updated values and new sections). Only affects new configurations
 * Build with IP2Country support to show country flags in the Web UI and amulegui, and country codes in amulecmd. Enabled by default with the DB-IP database, downloaded to `geoip.mmdb` in the configuration volume. It can be disabled in Preferences -> IP2Country
+* Include a minimal `ffprobe` (~3 MB) in the Docker image and enable media metadata extraction by default, so the length, bitrate and codec of your shared files are advertised in other clients' search results. It can be disabled in Preferences -> Files -> Media metadata extraction
 * Fix 'Permission denied' error (error 13) on `shareddir-recursive.dat` left read-only by old image versions. The auto share mod used to lock the file with `chmod 444` and the ownership fix never restored the mode
 * Files created before the supervisor starts now honour the `UMASK` environment variable, like the ones created by aMule itself
 

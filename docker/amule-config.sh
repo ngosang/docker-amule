@@ -231,7 +231,7 @@ Enabled=0
 BindAddress=127.0.0.1
 HttpPort=4713
 [MediaMetadata]
-Enabled=0
+Enabled=1
 FFProbePath=
 [GUI]
 HideOnClose=0
