@@ -10,6 +10,7 @@
 * The Web UI settings now live in the new `amuleapi.conf` file of the configuration volume (bind address, port, CORS and static files). The `[WebServer]` section of `amule.conf` is only used in legacy mode
 * UPnP does not forward the Web UI port anymore, amuleapi has no UPnP support. Only relevant with network_mode: host and `UPnPWebServerEnabled=1`
 * Update the default `amule.conf` template to match aMule 3.1.0 defaults (removed keys, updated values and new sections). Only affects new configurations
+* Build with IP2Country support to show country flags in the Web UI and amulegui, and country codes in amulecmd. Enabled by default with the DB-IP database, downloaded to `geoip.mmdb` in the configuration volume. It can be disabled in Preferences -> IP2Country
 
 ## 3.0.1-2 (2026/08/21)
 

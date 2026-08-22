@@ -142,7 +142,7 @@ ToolTipDelay=1
 ShowOverhead=0
 ShowInfoOnCatTabs=1
 VerticalToolbar=0
-GeoIPEnabled=0
+GeoIPEnabled=1
 VideoPlayer=
 StatGraphsInterval=3
 statsInterval=30
@@ -310,6 +310,12 @@ fi
 # Ensure WebServer and amuleapi are not started by amuled (they run as their own services)
 sed -i '/^\[WebServer\]/,/^\[/{s/^Enabled=.*/Enabled=0/}' "${AMULE_CONF}"
 sed -i '/^\[AmuleApi\]/,/^\[/{s/^Enabled=.*/Enabled=0/}' "${AMULE_CONF}"
+
+# Enable IP2Country on configurations created before 3.1.0. amuled writes GeoIPSource when
+# it saves the preferences, so this only runs once and a later opt-out is respected
+if ! grep -q '^GeoIPSource=' "${AMULE_CONF}"; then
+    sed -i 's/^GeoIPEnabled=.*/GeoIPEnabled=1/' "${AMULE_CONF}"
+fi
 
 # Migrate configs from the removed AmuleWebUI-Reloaded theme to the default theme,
 # unless the user mounted it (or any theme) as an external volume at that path.

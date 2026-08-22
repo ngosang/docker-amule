@@ -92,6 +92,11 @@ Web UI (`/usr/share/amule/amuleapi-static`).
 > and rewrites the whole file on shutdown, so any change made while the container is
 > running is lost on the next restart.
 
+Country flags are enabled by default. aMule downloads the free
+[DB-IP](https://db-ip.com/db/download/ip-to-country-lite) database (~5 MB) to `geoip.mmdb` in
+the configuration volume and refreshes it monthly, no account needed. Disable it or pick
+another source in *Preferences -> IP2Country*.
+
 The previous Web UI (`amuleweb`) is deprecated and will be removed. It is still available
 as a temporary fallback, see [Legacy Web UI (amuleweb)](#legacy-web-ui-amuleweb).
 
