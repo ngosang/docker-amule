@@ -3,6 +3,9 @@
 # Exit on error. For debug use set -x
 set -e
 
+# Apply the umask first so the files created below, and amuled itself, all agree
+umask "${UMASK:-0002}"
+
 # Configuration
 . /home/amule/amule-config.sh
 
@@ -11,9 +14,6 @@ printf "[INIT] Starting aMule mods ...\n"
 . /home/amule/amule-mods.sh
 mod_auto_restart
 mod_auto_share
-
-# Apply umask before launching supervisor so amuled inherits it
-umask "${UMASK:-0002}"
 
 # Hand off to S6 process supervisor
 # Export dynamic variables so S6 services inherit them

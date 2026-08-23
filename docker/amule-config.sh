@@ -406,6 +406,10 @@ fi
 # The configuration directory is always chowned: amuled runs as PUID/PGID and cannot
 # write there otherwise. FIX_PERMISSIONS only gates the download directories
 fix_permissions "${AMULE_HOME}"
+# Old image versions set shareddir-recursive.dat read-only (chmod 444) to work around an
+# aMule 3.0.0 bug. aMule rewrites all three shareddir*.dat files on every share rescan, so
+# a leftover read-only file fails with 'Permission denied'. The chown above doesn't fix modes
+chmod u+rw "${AMULE_HOME}"/shareddir*.dat 2>/dev/null || true
 if [ "${FIX_PERMISSIONS:-true}" = "true" ]; then
     fix_permissions "${AMULE_INCOMING}"
     fix_permissions "${AMULE_TEMP}"
