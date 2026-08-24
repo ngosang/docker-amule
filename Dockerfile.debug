@@ -14,8 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Build a minimal ffprobe from source (~3 MB). aMule uses it to extract length, bitrate and
 # codec from shared media files. The Debian ffmpeg package would add ~470 MB, so everything
 # is disabled except the demuxers, parsers and the file protocol that ffprobe needs to read
-# container metadata: no decoders, no encoders, no muxers, no filters, no network
-ARG FFMPEG_REF=n8.0
+# container metadata: no decoders, no encoders, no muxers, no filters, no network. ffprobe
+# needs only avcodec and avformat, so avdevice, avfilter, swscale and swresample are skipped
+ARG FFMPEG_REF=n9.0.1
 RUN git init -q ffmpeg-src && \
     git -C ffmpeg-src fetch --depth 1 https://github.com/FFmpeg/FFmpeg.git ${FFMPEG_REF} && \
     git -C ffmpeg-src checkout -q FETCH_HEAD && \
@@ -29,6 +30,10 @@ RUN git init -q ffmpeg-src && \
         --disable-network \
         --disable-programs \
         --disable-x86asm \
+        --disable-avdevice \
+        --disable-avfilter \
+        --disable-swscale \
+        --disable-swresample \
         --enable-ffprobe \
         --enable-demuxers \
         --enable-parsers \
