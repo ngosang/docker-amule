@@ -5,13 +5,14 @@
 * **Breaking change:** the aMule Web UI (amuleweb) is replaced by amuleapi and its new Web UI, on the same port 4711. `GUI_PWD` is now required on existing configurations and the container stops with an explanatory error if it is missing, the old Web UI password is not migrated, and your amulegui/amulecmd clients have to be updated with the new password. Back up your configuration volume and read the "Upgrading to 3.1.0" section of the README before upgrading
 * Update aMule to 3.1.0 stable release
 * Add `LEGACY_AMULEWEB_ENABLED` environment variable to keep the deprecated legacy Web UI (amuleweb) instead of amuleapi. Disabled by default
-* amuleapi also serves the aMule REST API under `/api/v0/`, on the same port and with the same credentials as the Web UI. It is documented in the [aMule repository](https://github.com/amule-org/amule/blob/master/docs/api/REFERENCE.md)
+* amuleapi also serves the aMule REST API under `/api/v0/`, on the same port and with the same credentials as the Web UI.
 * Add `WEBUI_GUEST_PWD` environment variable to enable the new read-only guest account of the Web UI. Disabled by default
 * The Web UI settings now live in the new `amuleapi.conf` file of the configuration volume (bind address, port, CORS and static files). The `[WebServer]` section of `amule.conf` is only used in legacy mode
 * UPnP does not forward the Web UI port anymore, amuleapi has no UPnP support. Only relevant with network_mode: host and `UPnPWebServerEnabled=1`
 * Update the default `amule.conf` template to match aMule 3.1.0 defaults (removed keys, updated values and new sections). Only affects new configurations
 * Build with IP2Country support to show country flags in the Web UI and amulegui, and country codes in amulecmd. Enabled by default with the DB-IP database, downloaded to `geoip.mmdb` in the configuration volume. It can be disabled in Preferences -> IP2Country
 * Include a minimal `ffprobe` from FFmpeg 9.0.1 (~3 MB) in the Docker image and enable media metadata extraction by default, so the length, bitrate and codec of your shared files are advertised in other clients' search results. It can be disabled in Preferences -> Files -> Media metadata extraction
+* Build wxWidgets from source instead of installing the Debian wxGTK packages. A wx bug crashes amuled during the startup downloads.
 * Fix 'Permission denied' error (error 13) on `shareddir-recursive.dat` left read-only by old image versions. The auto share mod used to lock the file with `chmod 444` and the ownership fix never restored the mode
 * Files created before the supervisor starts now honour the `UMASK` environment variable, like the ones created by aMule itself
 
