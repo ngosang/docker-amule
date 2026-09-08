@@ -7,6 +7,7 @@
 * Add `LEGACY_AMULEWEB_ENABLED` environment variable to keep the deprecated legacy Web UI (amuleweb) instead of amuleapi. Disabled by default
 * amuleapi also serves the aMule REST API under `/api/v0/`, on the same port and with the same credentials as the Web UI.
 * Add `WEBUI_GUEST_PWD` environment variable to enable the new read-only guest account of the Web UI. Disabled by default
+* Add `WEBUI_ENABLED` environment variable to disable the Web UI and REST API service, running only the amuled daemon (headless, reachable through External Connections). Enabled by default
 * The Web UI settings now live in the new `amuleapi.conf` file of the configuration volume (bind address, port, CORS and static files). The `[WebServer]` section of `amule.conf` is only used in legacy mode
 * UPnP does not forward the Web UI port anymore, amuleapi has no UPnP support. Only relevant with network_mode: host and `UPnPWebServerEnabled=1`
 * Update the default `amule.conf` template to match aMule 3.1.0 defaults (removed keys, updated values and new sections). Only affects new configurations

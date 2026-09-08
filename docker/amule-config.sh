@@ -341,8 +341,9 @@ fix_permissions() {
     printf "[INIT] WARNING: could not change the ownership of %s. This is expected on NFS or CIFS/SMB mounts: set PUID/PGID to match the share, or set FIX_PERMISSIONS=false to skip this step for the download directories.\n" "$1"
 }
 
-# Configure amuleapi (new Web UI + REST API), unless the legacy amuleweb was requested
-if [ "${LEGACY_AMULEWEB_ENABLED}" != "true" ]; then
+# Configure amuleapi (new Web UI + REST API), unless the Web UI is disabled or the legacy
+# amuleweb was requested (amuleweb reads amule.conf/remote.conf, generated above)
+if [ "${WEBUI_ENABLED:-true}" = "true" ] && [ "${LEGACY_AMULEWEB_ENABLED}" != "true" ]; then
     # amuleapi.conf holds the EC password in plaintext (amuleapi hashes it itself), so it
     # can only be written when GUI_PWD is set or the password was generated in this run
     if [ ! -f "${AMULEAPI_CONF}" ] && [ -z "${GUI_PWD}" ] && [ "${AMULE_CONF_CREATED}" != "true" ]; then

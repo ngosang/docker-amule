@@ -196,6 +196,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. It will overwrite the password in the config files. Required when upgrading a configuration created by an older image, see [Upgrading to 3.1.0](#upgrading-to-310). |
 | `-e WEBUI_PWD=<fill_password>` | Set the Web UI admin password. It will overwrite the password in the config files. |
 | `-e WEBUI_GUEST_PWD=<fill_password>` | Set the Web UI guest password, a read-only account. Optional, leave it empty to disable the guest account. If you remove the variable entirely, whatever was set before is kept. |
+| `-e WEBUI_ENABLED=true` | Start the Web UI and REST API service (amuleapi, or amuleweb when `LEGACY_AMULEWEB_ENABLED=true`). Optional, enabled by default. Set it to `false` to run a headless container with only the amuled daemon, reachable through External Connections on port 4712 (amulegui/amulecmd). |
 | `-e LEGACY_AMULEWEB_ENABLED=false` | Start the deprecated legacy Web UI (amuleweb) instead of amuleapi, on the same port. Optional, disabled by default. See [Legacy Web UI (amuleweb)](#legacy-web-ui-amuleweb). |
 | `-e TEMP_DIR=/downloads/temp` | Path inside the container for incomplete downloads. Optional, defaults to `/downloads/temp`. |
 | `-e INCOMING_DIR=/downloads/incoming` | Path inside the container for completed downloads. Optional, defaults to `/downloads/incoming`. |

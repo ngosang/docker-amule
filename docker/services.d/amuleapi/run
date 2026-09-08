@@ -1,5 +1,11 @@
 #!/bin/sh
 
+if [ "${WEBUI_ENABLED:-true}" != "true" ]; then
+    printf "[SUPERVISOR] Web UI disabled (WEBUI_ENABLED=false). Not starting amuleapi/amuleweb.\n"
+    # s6 restarts run when it exits, so keep the disabled service idle instead of crash-looping
+    exec sleep infinity
+fi
+
 printf "[SUPERVISOR] Waiting 5 s before starting the web UI service ...\n"
 sleep 5
 if [ "${LEGACY_AMULEWEB_ENABLED}" = "true" ]; then
