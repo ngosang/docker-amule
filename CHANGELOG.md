@@ -16,6 +16,7 @@
 * Build wxWidgets from source instead of installing the Debian wxGTK packages. A wx bug crashes amuled during the startup downloads.
 * Fix 'Permission denied' error (error 13) on `shareddir-recursive.dat` left read-only by old image versions. The auto share mod used to lock the file with `chmod 444` and the ownership fix never restored the mode
 * Files created before the supervisor starts now honour the `UMASK` environment variable, like the ones created by aMule itself
+* Give each s6 service its own logger so their output no longer interleaves mid-line in the Docker log
 
 ## 3.0.1-2 (2026/08/21)
 

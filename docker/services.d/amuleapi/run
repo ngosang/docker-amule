@@ -6,7 +6,7 @@ if [ "${WEBUI_ENABLED:-true}" != "true" ]; then
     exec sleep infinity
 fi
 
-printf "[SUPERVISOR] Waiting 5 s before starting the web UI service ...\n"
+printf "[SUPERVISOR] Waiting 5 s before starting the Web UI service ...\n"
 sleep 5
 if [ "${LEGACY_AMULEWEB_ENABLED}" = "true" ]; then
     printf "[SUPERVISOR] Starting amuleweb service (legacy Web UI) ...\n"

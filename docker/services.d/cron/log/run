@@ -1,0 +1,4 @@
+#!/bin/sh
+# Per-service s6-log: rewrites each line with one atomic write() to stdout, so
+# the services stop breaking each other's lines in the Docker log.
+exec s6-log 1
