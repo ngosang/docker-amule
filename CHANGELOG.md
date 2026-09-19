@@ -5,7 +5,7 @@
 * **Breaking change:** the aMule Web UI (amuleweb) is replaced by amuleapi and its new Web UI, on the same port 4711. `GUI_PWD` is now required on existing configurations and the container stops with an explanatory error if it is missing, the old Web UI password is not migrated, and your amulegui/amulecmd clients have to be updated with the new password. Back up your configuration volume and read the "Upgrading to 3.1.0" section of the README before upgrading
 * Update aMule to 3.1.0 stable release
 * Add `LEGACY_AMULEWEB_ENABLED` environment variable to keep the deprecated legacy Web UI (amuleweb) instead of amuleapi. Disabled by default
-* amuleapi also serves the aMule REST API under `/api/v0/`, on the same port and with the same credentials as the Web UI.
+* amuleapi also serves the aMule REST API under `/api/v1/`, on the same port and with the same credentials as the Web UI.
 * Add `WEBUI_GUEST_PWD` environment variable to enable the new read-only guest account of the Web UI. Disabled by default
 * Add `WEBUI_ENABLED` environment variable to disable the Web UI and REST API service, running only the amuled daemon (headless, reachable through External Connections). Enabled by default
 * The Web UI settings now live in the new `amuleapi.conf` file of the configuration volume (bind address, port, CORS and static files). The `[WebServer]` section of `amule.conf` is only used in legacy mode

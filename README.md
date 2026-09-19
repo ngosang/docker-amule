@@ -57,13 +57,13 @@ The architectures supported by this image are:
 
 The Web UI is at `<your-ip>:4711`. It is served by **amuleapi**, the daemon added in aMule
 3.1.0: it connects to aMule over External Connections and serves the Web UI at `/` and the
-REST API under `/api/v0/` on the same port.
+REST API under `/api/v1/` on the same port.
 
 The login form only asks for a password (there is no user name) and the password decides
 the role: `WEBUI_PWD` logs in as admin (full control) and `WEBUI_GUEST_PWD`, if you set it,
 as a read-only guest.
 
-The REST API shares that port and those credentials. `POST /api/v0/auth/login` mints a JWT
+The REST API shares that port and those credentials. `POST /api/v1/auth/login` mints a JWT
 and returns it as an `HttpOnly` `amuleapi_token` cookie, or in the response body when you
 ask for it with `?type=bearer` (for `Authorization: Bearer` clients). The admin password
 unlocks every endpoint; the guest one is read-only and gets `403` on any mutation. See the
@@ -310,17 +310,22 @@ We have implemented a cron scheduler to restart aMule from time to time. To enab
 
 ### Auto share mod
 
-By default, aMule only shares the "incoming" directory and shared folders cannot be selected in the Web UI.
+By default, aMule only shares the "incoming" directory. The new Web UI can add and remove share roots itself (`/api/v1/share_directories`), so this mod is **disabled by default**. It is only useful with the [legacy Web UI](#legacy-web-ui-amuleweb), which cannot select shares, or to declare shares from docker-compose without the UI.
 
-We have added this option in the Docker image. The configuration is updated when the container starts. It writes the listed directories as recursive shared roots (`shareddir-recursive.dat`), so aMule shares each directory together with **all of its sub-directories**. New sub-directories created later are shared automatically too (see `AutoRescanSharedDirs` below). aMule regenerates `shareddir.dat` (the union of all shared directories) on startup.
+When enabled, the mod writes the listed directories as recursive shared roots (`shareddir-recursive.dat`) every time the container starts, so aMule shares each directory together with **all of its sub-directories**. New sub-directories created later are shared automatically too (see `AutoRescanSharedDirs` below). aMule regenerates `shareddir.dat` (the union of all shared directories) on startup.
 * `MOD_AUTO_SHARE_ENABLED=true`
 * `MOD_AUTO_SHARE_DIRECTORIES=/downloads/incoming;/my_movies` => List of directories separated by semicolon ';'. Subdirectories will be shared too.
 
+> [!WARNING]
+> Don't manage shares from both the Web UI and this mod: it rewrites `shareddir-recursive.dat` on every start, so shares added from the Web UI are lost on restart.
+
 #### Shared directories scanning
 
-These options are enabled by default in the generated `amule.conf` and control how aMule scans the shared directories. You can change them by editing `amule.conf` in the config volume.
+These options control how aMule scans the shared directories. Change them from the new Web UI, or by editing `amule.conf` in the config volume with the container stopped.
 * `AutoRescanSharedDirs=1` => aMule watches the shared directories and detects changes (new files and sub-directories) automatically, without a manual "Reload shared files". New sub-directories under a recursive root are shared on the fly. Set to `0` to disable the watcher.
 * `FollowSymlinksInShares=1` => aMule follows symbolic links while scanning the shared directories. Set to `0` to skip symlinked files and directories entirely.
+* `ExcludeSharePatterns` => `|`-separated glob patterns of file names to skip while scanning. aMule 3.1.0 ships a default that hides OS metadata junk; it is not written to `amule.conf` but applies anyway, so add the key only to override it.
+* `ExcludeSharePatternsUseRegex=0` => Set to `1` to treat `ExcludeSharePatterns` as a single regular expression instead of glob patterns.
 
 ## Legacy Web UI (amuleweb)
 
