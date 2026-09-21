@@ -27,7 +27,7 @@ docker pull ghcr.io/ngosang/amule
 
 Stable:
 * `latest` — Latest stable release.
-* `3.0.1-2` — Specific stable version.
+* `3.1.0-1` — Specific stable version.
 
 Development:
 * `develop` — Latest development build (compiled from aMule master branch).

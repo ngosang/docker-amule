@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.0-1 (upcoming)
+## 3.1.0-1 (2026/09/21)
 
 * **Breaking change:** the aMule Web UI (amuleweb) is replaced by amuleapi and its new Web UI, on the same port 4711. `GUI_PWD` is now required on existing configurations and the container stops with an explanatory error if it is missing, the old Web UI password is not migrated, and your amulegui/amulecmd clients have to be updated with the new password. Back up your configuration volume and read the "Upgrading to 3.1.0" section of the README before upgrading
 * Update aMule to 3.1.0 stable release
