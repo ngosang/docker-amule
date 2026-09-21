@@ -2,7 +2,7 @@
 
 ## 3.1.0-1 (2026/09/21)
 
-* **Breaking change:** the aMule Web UI (amuleweb) is replaced by amuleapi and its new Web UI, on the same port 4711. `GUI_PWD` is now required on existing configurations and the container stops with an explanatory error if it is missing, the old Web UI password is not migrated, and your amulegui/amulecmd clients have to be updated with the new password. Back up your configuration volume and read the "Upgrading to 3.1.0" section of the README before upgrading
+* **Breaking change:** the aMule Web UI (amuleweb) is replaced by amuleapi and its new Web UI, on the same port 4711. There are now two separate passwords: `GUI_PWD` is the External Connections password (used by amulegui/amulecmd and internally by amuleapi, it does **not** log you into the web page) and is required on existing configurations, so the container stops with an explanatory error if it is missing; `WEBUI_PWD` is the one you actually log in to the Web UI with, and if you don't set it a random admin password is generated and only printed to the container logs (`docker logs amule`). The old Web UI password is not migrated, and your amulegui/amulecmd clients have to be updated with the new `GUI_PWD`. Back up your configuration volume and read the "Upgrading to 3.1.0" section of the README before upgrading
 * Update aMule to 3.1.0 stable release
 * Add `LEGACY_AMULEWEB_ENABLED` environment variable to keep the deprecated legacy Web UI (amuleweb) instead of amuleapi. Disabled by default
 * amuleapi also serves the aMule REST API under `/api/v1/`, on the same port and with the same credentials as the Web UI.

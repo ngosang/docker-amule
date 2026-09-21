@@ -71,10 +71,12 @@ upstream [REST reference](https://github.com/amule-org/amule/blob/master/docs/ap
 and [event stream docs](https://github.com/amule-org/amule/blob/master/docs/api/EVENTS.md).
 
 > [!IMPORTANT]
-> Set `GUI_PWD` and `WEBUI_PWD`. If you leave them out, random passwords are generated on
-> the first start and only printed to the container logs (`docker logs amule`). `GUI_PWD`
-> is **mandatory** when you upgrade a configuration created by an older image, see
-> [Upgrading to 3.1.0](#upgrading-to-310).
+> These are two different passwords: `WEBUI_PWD` is the one you log in to the Web UI with,
+> while `GUI_PWD` is the External Connections password (amulegui/amulecmd, and amuleapi
+> internally) and never logs you into the web page. Set both. If you leave them out, random
+> passwords are generated on the first start and only printed to the container logs
+> (`docker logs amule`). `GUI_PWD` is **mandatory** when you upgrade a configuration created
+> by an older image, see [Upgrading to 3.1.0](#upgrading-to-310).
 
 > [!NOTE]
 > amuleapi speaks plain HTTP, so don't expose port `4711` to the Internet directly. Put a
@@ -193,8 +195,8 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e PGID=1000` | for GroupID - see below for explanation. |
 | `-e UMASK=0002` | Set the umask for file creation. Optional, defaults to `0002` (files: 664, dirs: 775, group write access). |
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
-| `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. It will overwrite the password in the config files. Required when upgrading a configuration created by an older image, see [Upgrading to 3.1.0](#upgrading-to-310). |
-| `-e WEBUI_PWD=<fill_password>` | Set the Web UI admin password. It will overwrite the password in the config files. |
+| `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. This is **not** the Web UI login password (see `WEBUI_PWD`). It will overwrite the password in the config files. Required when upgrading a configuration created by an older image, see [Upgrading to 3.1.0](#upgrading-to-310). |
+| `-e WEBUI_PWD=<fill_password>` | Set the Web UI admin password, the one you log in to the Web UI with. It will overwrite the password in the config files. |
 | `-e WEBUI_GUEST_PWD=<fill_password>` | Set the Web UI guest password, a read-only account. Optional, leave it empty to disable the guest account. If you remove the variable entirely, whatever was set before is kept. |
 | `-e WEBUI_ENABLED=true` | Start the Web UI and REST API service (amuleapi, or amuleweb when `LEGACY_AMULEWEB_ENABLED=true`). Optional, enabled by default. Set it to `false` to run a headless container with only the amuled daemon, reachable through External Connections on port 4712 (amulegui/amulecmd). |
 | `-e LEGACY_AMULEWEB_ENABLED=false` | Start the deprecated legacy Web UI (amuleweb) instead of amuleapi, on the same port. Optional, disabled by default. See [Legacy Web UI (amuleweb)](#legacy-web-ui-amuleweb). |
@@ -235,11 +237,14 @@ configuration volume first.
    stops on start with an explanatory error. Set `GUI_PWD` to a password of your choice
    and remember to update your `amulegui` / `amulecmd` clients with it, since the
    container rewrites it in `amule.conf`.
-2. **The Web UI password is not migrated.** If `WEBUI_PWD` is not set, a new random admin
-   password is generated on the first start with the new Web UI and printed to the
-   container logs (`docker logs amule`). The old `amuleweb` password cannot be reused:
-   `amule.conf` stores it as a plain MD5 hash, while amuleapi keeps its own salted and
-   stretched digest in `amuleapi-passwords`.
+2. **`WEBUI_PWD` is the Web UI login password, and it is not migrated.** This is a
+   different password from `GUI_PWD` above: `GUI_PWD` is only the External Connections
+   password and never logs you into the web page. If `WEBUI_PWD` is not set, a new random
+   admin password is generated on the first start with the new Web UI and printed to the
+   container logs (`docker logs amule`), so set `WEBUI_PWD` to a password of your choice to
+   be able to log in. The old `amuleweb` password cannot be reused: `amule.conf` stores it
+   as a plain MD5 hash, while amuleapi keeps its own salted and stretched digest in
+   `amuleapi-passwords`.
 3. **New files in the configuration volume**: `amuleapi.conf` (settings, including the
    plain text External Connections password), `amuleapi-passwords` (admin and guest
    passwords, salted and stretched) and `amuleapi-jwt-secret` (signs the login sessions;
