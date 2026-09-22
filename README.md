@@ -9,7 +9,7 @@
 
 [aMule](https://github.com/amule-org/amule) is a multi-platform client for the ED2K file sharing network and based on the windows client eMule. aMule started in August 2003, as a fork of xMule, which is a fork of lMule.
 
-![Download Screenshot](doc/screenshot.png)
+![aMule download screenshot](doc/screenshot.png)
 
 ## Docker Images
 
@@ -338,6 +338,8 @@ These options control how aMule scans the shared directories. Change them from t
 > `amuleweb` is deprecated upstream and will be removed from aMule, and from this image,
 > in a future release. It is kept only as a fallback while the new Web UI matures, so
 > please migrate to amuleapi instead of settling here.
+
+![aMule legacy Web UI screenshot](doc/screenshot_legacy.png)
 
 Set `LEGACY_AMULEWEB_ENABLED=true` and the container starts `amuleweb` instead of
 `amuleapi`, on the same port `4711`. The amuleapi files in the configuration volume are
