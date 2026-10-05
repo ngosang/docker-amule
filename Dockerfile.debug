@@ -75,7 +75,6 @@ RUN git init -q wx-src && \
         --disable-debugreport \
         --disable-fs_inet \
         --disable-ftp \
-        --disable-tarstream \
         --disable-sound && \
     make -j"$(nproc)" && \
     make install && \
