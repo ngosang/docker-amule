@@ -317,6 +317,10 @@ if ! grep -q '^GeoIPSource=' "${AMULE_CONF}"; then
     sed -i 's/^GeoIPEnabled=.*/GeoIPEnabled=1/' "${AMULE_CONF}"
 fi
 
+# Migrate the default nickname of old image versions to the current aMule default.
+# A nickname chosen by the user is left untouched
+sed -i 's|^Nick=http://www.aMule.org$|Nick=https://amule-org.github.io|' "${AMULE_CONF}"
+
 # Migrate configs from the removed AmuleWebUI-Reloaded theme to the default theme,
 # unless the user mounted it (or any theme) as an external volume at that path.
 if [ ! -d /usr/share/amule/webserver/AmuleWebUI-Reloaded ]; then
