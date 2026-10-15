@@ -65,7 +65,7 @@ as a read-only guest.
 
 The REST API shares that port and those credentials. `POST /api/v1/auth/login` mints a JWT
 and returns it as an `HttpOnly` `amuleapi_token` cookie, or in the response body when you
-ask for it with `?type=bearer` (for `Authorization: Bearer` clients). The admin password
+ask for it with `?include_token=true` (for `Authorization: Bearer` clients). The admin password
 unlocks every endpoint; the guest one is read-only and gets `403` on any mutation. See the
 upstream [REST reference](https://github.com/amule-org/amule/blob/master/docs/api/REFERENCE.md)
 and [event stream docs](https://github.com/amule-org/amule/blob/master/docs/api/EVENTS.md).
