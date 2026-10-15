@@ -48,13 +48,12 @@ RUN git init -q ffmpeg-src && \
 # wxWidgets is built from source because of a bug in wx: amuled hits a use-after-free in
 # the wx event loop during the startup HTTP downloads
 # https://github.com/amule-org/amule/issues/1136
-# The fix lands in wx 3.2.12, so WX_REF pins the 3.2-branch commit that carries it. Debian
-# trixie is on 3.2.8
+# The fix is in wx 3.2.12. Debian trixie is on 3.2.8 and testing/unstable on 3.2.11
 # TODO: revert this and install the Debian packages again (libwxgtk3.2-dev at build time,
 # libwxbase3.2-1t64 at run time) once wx 3.2.12 is in the Debian repositories
 # Only wxBase and wxNet are built, which also drops glib: aMule links it only when wx
 # reports __WXGTK__. --with-libcurl is mandatory, aMule's HTTP downloads use wxWebRequest
-ARG WX_REF=3382306c8c35113ea93fe9276aa6f3a0587677c0
+ARG WX_REF=v3.2.12
 RUN git init -q wx-src && \
     git -C wx-src fetch --depth 1 https://github.com/wxWidgets/wxWidgets.git ${WX_REF} && \
     git -C wx-src checkout -q FETCH_HEAD && \
