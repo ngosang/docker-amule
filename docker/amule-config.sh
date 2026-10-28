@@ -386,6 +386,12 @@ EOM
         printf "[INIT] File %s found. Using existing configuration.\n" "${AMULEAPI_CONF}"
     fi
 
+    # Sub-path for a reverse proxy, such as /amule. Not set means no path
+    sed -i '/^\[Server\]/,/^\[/{/^BasePath=/d}' "${AMULEAPI_CONF}"
+    if [ -n "${WEBUI_BASE_PATH}" ]; then
+        sed -i "/^\[Server\]/a BasePath=${WEBUI_BASE_PATH}" "${AMULEAPI_CONF}"
+    fi
+
     # amuleapi refuses to start, and to run the --set-*-pass below, if any of its files
     # is readable by group or others. It creates them 600, so this is only for the ones
     # restored from a backup with looser permissions

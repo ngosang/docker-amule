@@ -8,6 +8,7 @@
 * amuleapi now logs in to aMule with the External Connections password digest from `amule.conf` (`PasswordMD5` in `amuleapi.conf`), kept in sync on every start. The plain text password is removed from `amuleapi.conf`, and `GUI_PWD` is no longer required to upgrade a configuration created by an older image
 * Set the Web UI passwords through stdin, so they don't show up in the process list
 * Stop sharing Office documents on configurations that kept the 3.1.0 default `ExcludeSharePatterns`, as aMule 3.2.0 does on new ones. A custom list is not changed
+* Add `WEBUI_BASE_PATH` environment variable to serve the Web UI and REST API under a sub-path behind a reverse proxy. Not set by default
 * Remove the `Ed2kServersUrl`, `DateTimeFormat`, `ShowAllNotCats` and `SplitterbarPosition` keys from the default `amule.conf` template. aMule 3.2.0 removes them and moves the server list address to `addresses.dat`. Only affects new configurations
 * Migrate the old default nickname `http://www.aMule.org` to the current aMule default `https://amule-org.github.io` on existing configurations. Custom nicknames are not changed
 

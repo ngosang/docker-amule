@@ -81,11 +81,11 @@ and [event stream docs](https://github.com/amule-org/amule/blob/master/docs/api/
 > amuleapi speaks plain HTTP, so don't expose port `4711` to the Internet directly. Put a
 > reverse proxy with TLS in front of it. If the proxy rewrites the `Host` header (nginx does),
 > set `X-Forwarded-Host`, or some browsers get `403` on their own changes. To serve it under a
-> sub-path, set `BasePath` in `amuleapi.conf`. See the upstream
+> sub-path, such as `https://example.com/amule/`, set `WEBUI_BASE_PATH=/amule`, which writes `BasePath` in `amuleapi.conf` on every start. See the upstream
 > [reverse proxy examples](https://github.com/amule-org/amule/blob/master/docs/QUICKSTART-AMULEAPI.md).
 
 The Web UI and API settings live in their own `amuleapi.conf` file in the configuration
-volume (bind address, port, CORS, `BasePath` and `StaticRoot`); the `[WebServer]` section of
+volume (bind address, port, CORS and `StaticRoot`); the `[WebServer]` section of
 `amule.conf` is only used by the legacy Web UI. Restart the container after editing it.
 To serve your own Web UI bundle instead of the one shipped in the image, mount it in the
 container and set `StaticRoot` to its path. Leave `StaticRoot=` empty to serve the bundled
@@ -207,6 +207,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. This is **not** the Web UI login password (see `WEBUI_PWD`). It will overwrite the password in the config files. |
 | `-e WEBUI_PWD=<fill_password>` | Set the Web UI admin password, the one you log in to the Web UI with. It will overwrite the password in the config files. |
 | `-e WEBUI_GUEST_PWD=<fill_password>` | Set the Web UI guest password, a read-only account. Optional, leave it empty to disable the guest account. If you remove the variable entirely, whatever was set before is kept. |
+| `-e WEBUI_BASE_PATH=/amule` | Serve the Web UI and REST API under a sub-path, for a reverse proxy that shares the hostname with other apps. Only letters, digits, `-`, `.`, `_`, `~` and `/` are allowed. Optional, not set by default (no path). |
 | `-e WEBUI_ENABLED=true` | Start the Web UI and REST API service (amuleapi, or amuleweb when `LEGACY_AMULEWEB_ENABLED=true`). Optional, enabled by default. Set it to `false` to run a headless container with only the amuled daemon, reachable through External Connections on port 4712 (amulegui/amulecmd). |
 | `-e LEGACY_AMULEWEB_ENABLED=false` | Start the deprecated legacy Web UI (amuleweb) instead of amuleapi, on the same port. Optional, disabled by default. See [Legacy Web UI (amuleweb)](#legacy-web-ui-amuleweb). |
 | `-e TEMP_DIR=/downloads/temp` | Path inside the container for incomplete downloads. Optional, defaults to `/downloads/temp`. |
