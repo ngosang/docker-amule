@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.2.0-1 (upcoming)
+## 3.2.0-1 (2026/10/28)
 
 * **Security release:** aMule 3.2.0 fixes 15 vulnerabilities, all of them present in 3.1.0. Some upstream defaults changed for safety, read the "Upgrading to 3.2.0" section of the README and the upstream [release notes](https://amule-org.github.io/changelog/3.2.0)
 * Update aMule to 3.2.0 stable release
