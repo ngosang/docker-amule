@@ -173,15 +173,11 @@ NewVersionCheck=0
 AdvancedSpamFilter=1
 MessageUseCaptchas=1
 Language=
-SplitterbarPosition=75
 YourHostname=
-DateTimeFormat=%A, %x, %X
 AllcatType=0
-ShowAllNotCats=0
 SmartIdState=0
 DropSlowSources=0
 KadNodesUrl=https://upd.emule-security.org/nodes.dat
-Ed2kServersUrl=https://upd.emule-security.org/server.met
 ShowRatesOnTitle=0
 GeoLiteCountryUpdateUrl=
 StatsServerName=Shorty's ED2K stats
@@ -321,6 +317,12 @@ fi
 # A nickname chosen by the user is left untouched
 sed -i 's|^Nick=http://www.aMule.org$|Nick=https://amule-org.github.io|' "${AMULE_CONF}"
 
+# aMule 3.2.0 stops sharing Office documents by default, but keeps the exclusion list saved
+# by 3.1.0. Remove the untouched 3.1.0 default so the new one applies. A custom list is kept
+if grep -qxF 'ExcludeSharePatterns=.DS_Store|._*|.Spotlight-V100|.Trashes|.fseventsd|.DocumentRevisions-V100|.TemporaryItems|.apdisk|Thumbs.db|ehthumbs.db|desktop.ini|.directory' "${AMULE_CONF}"; then
+    sed -i '/^ExcludeSharePatterns=/d' "${AMULE_CONF}"
+fi
+
 # Migrate configs from the removed AmuleWebUI-Reloaded theme to the default theme,
 # unless the user mounted it (or any theme) as an external volume at that path.
 if [ ! -d /usr/share/amule/webserver/AmuleWebUI-Reloaded ]; then
@@ -345,20 +347,20 @@ fix_permissions() {
     printf "[INIT] WARNING: could not change the ownership of %s. This is expected on NFS or CIFS/SMB mounts: set PUID/PGID to match the share, or set FIX_PERMISSIONS=false to skip this step for the download directories.\n" "$1"
 }
 
+# amuleapi logs in to amuled with the same MD5 digest amule.conf stores, so it is copied
+# from there on every start and never needs the plaintext GUI_PWD. Done in every mode, so
+# the plaintext Password written by the 3.1.0 image is always removed (amuleapi refuses to
+# start with both)
+AMULE_EC_HASH=$(grep -m1 -o '^ECPassword=[0-9a-fA-F]\{32\}' "${AMULE_CONF}" | cut -d= -f2)
+if [ -f "${AMULEAPI_CONF}" ]; then
+    grep -q '^\[EC\]' "${AMULEAPI_CONF}" || printf '[EC]\n' >> "${AMULEAPI_CONF}"
+    sed -i -e '/^\[EC\]/,/^\[/{/^Password=/d;/^PasswordMD5=/d}' \
+        -e "/^\[EC\]/a PasswordMD5=${AMULE_EC_HASH}" "${AMULEAPI_CONF}"
+fi
+
 # Configure amuleapi (new Web UI + REST API), unless the Web UI is disabled or the legacy
 # amuleweb was requested (amuleweb reads amule.conf/remote.conf, generated above)
 if [ "${WEBUI_ENABLED:-true}" = "true" ] && [ "${LEGACY_AMULEWEB_ENABLED}" != "true" ]; then
-    # amuleapi.conf holds the EC password in plaintext (amuleapi hashes it itself), so it
-    # can only be written when GUI_PWD is set or the password was generated in this run
-    if [ ! -f "${AMULEAPI_CONF}" ] && [ -z "${GUI_PWD}" ] && [ "${AMULE_CONF_CREATED}" != "true" ]; then
-        printf "[INIT] ERROR: %s is missing and GUI_PWD is not set.\n" "${AMULEAPI_CONF}"
-        printf "[INIT] amuleapi needs the plaintext Remote GUI (EC) password and it hashes it\n"
-        printf "[INIT] itself, so the MD5 hash in amule.conf cannot be reused. Set GUI_PWD to a\n"
-        printf "[INIT] password of your choice (amulegui/amulecmd clients must then use the new\n"
-        printf "[INIT] one), or set LEGACY_AMULEWEB_ENABLED=true to keep the legacy Web UI.\n"
-        exit 1
-    fi
-
     if [ ! -f "${AMULEAPI_CONF}" ]; then
         printf "[INIT] File %s NOT found. Generating new default configuration ...\n" "${AMULEAPI_CONF}"
         cat > ${AMULEAPI_CONF} <<- EOM
@@ -370,7 +372,7 @@ StaticRoot=
 [EC]
 Host=127.0.0.1
 Port=4712
-Password=${AMULE_GUI_PWD}
+PasswordMD5=${AMULE_EC_HASH}
 Encryption=1
 [Auth]
 LoginFailureWindowSeconds=60
@@ -382,11 +384,6 @@ EOM
         printf "[INIT] File %s successfullly generated.\n" "${AMULEAPI_CONF}"
     else
         printf "[INIT] File %s found. Using existing configuration.\n" "${AMULEAPI_CONF}"
-        # Keep the EC password in sync with amule.conf. Plaintext, so escape it for sed.
-        if [ -n "${GUI_PWD}" ]; then
-            ESCAPED_GUI_PWD=$(printf '%s' "${AMULE_GUI_PWD}" | sed -e 's/[\\&|]/\\&/g')
-            sed -i "s|^Password=.*|Password=${ESCAPED_GUI_PWD}|" "${AMULEAPI_CONF}"
-        fi
     fi
 
     # amuleapi refuses to start, and to run the --set-*-pass below, if any of its files
@@ -400,12 +397,22 @@ EOM
         if [ -z "${WEBUI_PWD}" ] && [ "${AMULE_CONF_CREATED}" != "true" ]; then
             printf "[INIT] Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
         fi
-        amuleapi --config-dir="${AMULE_HOME}" --no-log-file --set-admin-pass="${AMULE_WEBUI_PWD}"
+        # Through stdin, so the password doesn't show up in the process list
+        printf '%s\n' "${AMULE_WEBUI_PWD}" | amuleapi --config-dir="${AMULE_HOME}" --no-log-file --set-admin-pass-stdin
     fi
     # Defined but empty disables the read-only guest account, the amuleapi default
     if [ -n "${WEBUI_GUEST_PWD+x}" ]; then
-        amuleapi --config-dir="${AMULE_HOME}" --no-log-file --set-guest-pass="${WEBUI_GUEST_PWD}"
+        printf '%s\n' "${WEBUI_GUEST_PWD}" | amuleapi --config-dir="${AMULE_HOME}" --no-log-file --set-guest-pass-stdin
     fi
+fi
+
+# aMule 3.2.0 refuses download and shared folders set from the Web UI or amulegui unless they
+# are under a root listed in allowed-remote-dirs.dat, empty by default. Seed it once with
+# /downloads and the incoming and temp directories in amule.conf; later edits are kept
+ALLOWED_REMOTE_DIRS=${AMULE_HOME}/allowed-remote-dirs.dat
+if [ ! -f "${ALLOWED_REMOTE_DIRS}" ]; then
+    printf "[INIT] File %s NOT found. Allowing remote folder changes under /downloads and the incoming and temp directories ...\n" "${ALLOWED_REMOTE_DIRS}"
+    { printf '/downloads\n'; sed -n 's/^IncomingDir=//p;s/^TempDir=//p' "${AMULE_CONF}"; } | tr -d '\r' | sort -u > "${ALLOWED_REMOTE_DIRS}"
 fi
 
 # The configuration directory is always chowned: amuled runs as PUID/PGID and cannot

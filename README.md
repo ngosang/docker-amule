@@ -75,19 +75,28 @@ and [event stream docs](https://github.com/amule-org/amule/blob/master/docs/api/
 > while `GUI_PWD` is the External Connections password (amulegui/amulecmd, and amuleapi
 > internally) and never logs you into the web page. Set both. If you leave them out, random
 > passwords are generated on the first start and only printed to the container logs
-> (`docker logs amule`). `GUI_PWD` is **mandatory** when you upgrade a configuration created
-> by an older image, see [Upgrading to 3.1.0](#upgrading-to-310).
+> (`docker logs amule`).
 
 > [!NOTE]
 > amuleapi speaks plain HTTP, so don't expose port `4711` to the Internet directly. Put a
-> reverse proxy with TLS in front of it.
+> reverse proxy with TLS in front of it. If the proxy rewrites the `Host` header (nginx does),
+> set `X-Forwarded-Host`, or some browsers get `403` on their own changes. To serve it under a
+> sub-path, set `BasePath` in `amuleapi.conf`. See the upstream
+> [reverse proxy examples](https://github.com/amule-org/amule/blob/master/docs/QUICKSTART-AMULEAPI.md).
 
 The Web UI and API settings live in their own `amuleapi.conf` file in the configuration
-volume (bind address, port, CORS and `StaticRoot`); the `[WebServer]` section of
+volume (bind address, port, CORS, `BasePath` and `StaticRoot`); the `[WebServer]` section of
 `amule.conf` is only used by the legacy Web UI. Restart the container after editing it.
 To serve your own Web UI bundle instead of the one shipped in the image, mount it in the
 container and set `StaticRoot` to its path. Leave `StaticRoot=` empty to serve the bundled
 Web UI (`/usr/share/amule/amuleapi-static`).
+
+The Web UI, amulegui and the API can only set the incoming, temporary, shared and category
+folders to a folder under the roots listed in `allowed-remote-dirs.dat` (one absolute path
+per line, in the configuration volume). aMule leaves it empty, refusing every remote change,
+so the container creates it on the first start with `/downloads` and the incoming and temp
+directories. Add the other folders you mount, `/my_movies` for example, and restart the
+container. Folders already configured keep working, and removing a share is always allowed.
 
 > [!IMPORTANT]
 > Stop the container before editing `amule.conf`. aMule keeps the configuration in memory
@@ -96,7 +105,7 @@ Web UI (`/usr/share/amule/amuleapi-static`).
 
 Country flags are enabled by default. aMule downloads the free
 [DB-IP](https://db-ip.com/db/download/ip-to-country-lite) database (~5 MB) to `geoip.mmdb` in
-the configuration volume and refreshes it monthly, no account needed. Disable it or pick
+the configuration volume and refreshes it weekly, no account needed. Disable it or pick
 another source in *Preferences -> IP2Country*.
 
 Media metadata extraction is enabled by default. aMule runs the bundled `ffprobe` on each
@@ -195,7 +204,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e PGID=1000` | for GroupID - see below for explanation. |
 | `-e UMASK=0002` | Set the umask for file creation. Optional, defaults to `0002` (files: 664, dirs: 775, group write access). |
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
-| `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. This is **not** the Web UI login password (see `WEBUI_PWD`). It will overwrite the password in the config files. Required when upgrading a configuration created by an older image, see [Upgrading to 3.1.0](#upgrading-to-310). |
+| `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. This is **not** the Web UI login password (see `WEBUI_PWD`). It will overwrite the password in the config files. |
 | `-e WEBUI_PWD=<fill_password>` | Set the Web UI admin password, the one you log in to the Web UI with. It will overwrite the password in the config files. |
 | `-e WEBUI_GUEST_PWD=<fill_password>` | Set the Web UI guest password, a read-only account. Optional, leave it empty to disable the guest account. If you remove the variable entirely, whatever was set before is kept. |
 | `-e WEBUI_ENABLED=true` | Start the Web UI and REST API service (amuleapi, or amuleweb when `LEGACY_AMULEWEB_ENABLED=true`). Optional, enabled by default. Set it to `false` to run a headless container with only the amuled daemon, reachable through External Connections on port 4712 (amulegui/amulecmd). |
@@ -223,41 +232,46 @@ In this instance `PUID=1000` and `PGID=1000`, to find yours use `id user` as bel
     uid=1000(dockeruser) gid=1000(dockergroup) groups=1000(dockergroup)
 ```
 
-## Upgrading to 3.1.0
+## Upgrading to 3.2.0
 
-Version 3.1.0 replaces the legacy Web UI (`amuleweb`, deprecated upstream) with `amuleapi`
-and its new Web UI, on the same port `4711`. Read this before upgrading, and back up your
-configuration volume first.
+aMule 3.2.0 is a security release and a drop-in upgrade, but some defaults changed for
+safety. Read the upstream [release notes](https://amule-org.github.io/changelog/3.2.0).
+The ones that matter in this image:
 
-1. **`GUI_PWD` is now mandatory if you never set it.** amuleapi needs the External
-   Connections password in plain text in its own config file, because it hashes the
-   password itself: the MD5 hash stored in `amule.conf` cannot be reused, it would be
-   hashed twice, and upstream deliberately dropped the option to read it. So if `GUI_PWD`
-   is not set and the configuration volume already has an `amule.conf`, the container
-   stops on start with an explanatory error. Set `GUI_PWD` to a password of your choice
-   and remember to update your `amulegui` / `amulecmd` clients with it, since the
-   container rewrites it in `amule.conf`.
-2. **`WEBUI_PWD` is the Web UI login password, and it is not migrated.** This is a
-   different password from `GUI_PWD` above: `GUI_PWD` is only the External Connections
+1. **Remote folder changes need `allowed-remote-dirs.dat`.** The container creates it with
+   `/downloads` and the incoming and temp directories. To add shares outside them from the
+   Web UI, list their roots in that file, see [Application Setup](#application-setup).
+2. **`GUI_PWD` is no longer needed by amuleapi.** It now logs in to aMule with the same
+   password digest stored in `amule.conf`, so the plain text External Connections password
+   is removed from `amuleapi.conf`, and upgrading from 3.0.x works without `GUI_PWD`.
+
+## Upgrading from 3.0.x
+
+Version 3.1.0 replaced the legacy Web UI (`amuleweb`, deprecated upstream) with `amuleapi`
+and its new Web UI, on the same port `4711`. Read this before upgrading from 3.0.x, and back
+up your configuration volume first.
+
+1. **`WEBUI_PWD` is the Web UI login password, and it is not migrated.** This is a
+   different password from `GUI_PWD`: `GUI_PWD` is only the External Connections
    password and never logs you into the web page. If `WEBUI_PWD` is not set, a new random
    admin password is generated on the first start with the new Web UI and printed to the
    container logs (`docker logs amule`), so set `WEBUI_PWD` to a password of your choice to
    be able to log in. The old `amuleweb` password cannot be reused: `amule.conf` stores it
    as a plain MD5 hash, while amuleapi keeps its own salted and stretched digest in
    `amuleapi-passwords`.
-3. **New files in the configuration volume**: `amuleapi.conf` (settings, including the
-   plain text External Connections password), `amuleapi-passwords` (admin and guest
+2. **New files in the configuration volume**: `amuleapi.conf` (settings, including the
+   External Connections password digest), `amuleapi-passwords` (admin and guest
    passwords, salted and stretched) and `amuleapi-jwt-secret` (signs the login sessions;
    delete it to sign everyone out). amuleapi refuses to start if any of them is readable
    by group or others, so the container forces mode `600` on every start.
-4. **Optional read-only account**: set `WEBUI_GUEST_PWD` to enable it, leave it empty to
+3. **Optional read-only account**: set `WEBUI_GUEST_PWD` to enable it, leave it empty to
    disable it. Removing the variable keeps whatever was set before.
-5. **Web UI settings moved to `amuleapi.conf`.** The `[WebServer]` section of `amule.conf`
+4. **Web UI settings moved to `amuleapi.conf`.** The `[WebServer]` section of `amule.conf`
    (`Port`, `Template`, `UseGzip`, `PageRefreshTime`, ...) is ignored by amuleapi, so any
    customization there has to be redone in `amuleapi.conf`, which only has the equivalents
    for the bind address, the port and the static files. Nothing is lost, the section stays
    in `amule.conf` and is used again in legacy mode.
-6. **UPnP no longer forwards the Web UI port.** Only relevant if you run with
+5. **UPnP no longer forwards the Web UI port.** Only relevant if you run with
    `network_mode: host` and had `UPnPWebServerEnabled=1`: amuleapi has no UPnP support, so
    port `4711` has to be forwarded by hand from now on. See the [UPnP](#upnp) section.
 
@@ -315,7 +329,7 @@ We have implemented a cron scheduler to restart aMule from time to time. To enab
 
 ### Auto share mod
 
-By default, aMule only shares the "incoming" directory. The new Web UI can add and remove share roots itself (`/api/v1/share_directories`), so this mod is **disabled by default**. It is only useful with the [legacy Web UI](#legacy-web-ui-amuleweb), which cannot select shares, or to declare shares from docker-compose without the UI.
+By default, aMule only shares the "incoming" directory. The new Web UI can add and remove share roots itself (`/api/v1/share_directories`), as long as they are under a root listed in `allowed-remote-dirs.dat` (see [Application Setup](#application-setup)), so this mod is **disabled by default**. It is only useful with the [legacy Web UI](#legacy-web-ui-amuleweb), which cannot select shares, or to declare shares from docker-compose without the UI.
 
 When enabled, the mod writes the listed directories as recursive shared roots (`shareddir-recursive.dat`) every time the container starts, so aMule shares each directory together with **all of its sub-directories**. New sub-directories created later are shared automatically too (see `AutoRescanSharedDirs` below). aMule regenerates `shareddir.dat` (the union of all shared directories) on startup.
 * `MOD_AUTO_SHARE_ENABLED=true`
@@ -326,10 +340,10 @@ When enabled, the mod writes the listed directories as recursive shared roots (`
 
 #### Shared directories scanning
 
-These options control how aMule scans the shared directories. Change them from the new Web UI, or by editing `amule.conf` in the config volume with the container stopped.
+These options control how aMule scans the shared directories. Change them from the new Web UI, or by editing `amule.conf` in the config volume with the container stopped. `FollowSymlinksInShares` can only be changed in `amule.conf`.
 * `AutoRescanSharedDirs=1` => aMule watches the shared directories and detects changes (new files and sub-directories) automatically, without a manual "Reload shared files". New sub-directories under a recursive root are shared on the fly. Set to `0` to disable the watcher.
 * `FollowSymlinksInShares=1` => aMule follows symbolic links while scanning the shared directories. Set to `0` to skip symlinked files and directories entirely.
-* `ExcludeSharePatterns` => `|`-separated glob patterns of file names to skip while scanning. aMule 3.1.0 ships a default that hides OS metadata junk; it is not written to `amule.conf` but applies anyway, so add the key only to override it.
+* `ExcludeSharePatterns` => `|`-separated glob patterns of file and folder names to skip while scanning. The default skips OS metadata files and, since 3.2.0, Office documents. Once the list is saved to `amule.conf`, for example after changing the preferences, aMule keeps it on upgrades. The container only replaces an unchanged 3.1.0 default with the new one.
 * `ExcludeSharePatternsUseRegex=0` => Set to `1` to treat `ExcludeSharePatterns` as a single regular expression instead of glob patterns.
 
 ## Legacy Web UI (amuleweb)
@@ -343,9 +357,7 @@ These options control how aMule scans the shared directories. Change them from t
 
 Set `LEGACY_AMULEWEB_ENABLED=true` and the container starts `amuleweb` instead of
 `amuleapi`, on the same port `4711`. The amuleapi files in the configuration volume are
-left untouched, so removing the variable switches back to the new Web UI. Note that
-nothing amuleapi needs is created while this mode is on, so switching back on an existing
-configuration still requires `GUI_PWD`, see [Upgrading to 3.1.0](#upgrading-to-310).
+left untouched, so removing the variable switches back to the new Web UI.
 
 In this mode the Web UI password is the `WEBUI_PWD` one stored in `amule.conf`, and there
 is no REST API and no read-only guest account (`WEBUI_GUEST_PWD` is ignored).
