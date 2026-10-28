@@ -7,7 +7,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-      - GUI_PWD=<fill_password>
+      - GUI_PWD=<fill_password> # optional, only for amulegui/amulecmd
       - WEBUI_PWD=<fill_password>
       - MOD_AUTO_RESTART_ENABLED=true
       - MOD_AUTO_RESTART_CRON=0 6 * * *

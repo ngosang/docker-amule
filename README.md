@@ -143,7 +143,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-      - GUI_PWD=<fill_password>
+      - GUI_PWD=<fill_password> # optional, only for amulegui/amulecmd
       - WEBUI_PWD=<fill_password>
       - MOD_AUTO_RESTART_ENABLED=true
       - MOD_AUTO_RESTART_CRON=0 6 * * *
@@ -177,7 +177,7 @@ docker run -d \
   -e PUID=1000 \
   -e PGID=1000 \
   -e TZ=Europe/London \
-  -e GUI_PWD=<fill_password> `#recommended` \
+  -e GUI_PWD=<fill_password> `#optional` \
   -e WEBUI_PWD=<fill_password> `#recommended` \
   -e MOD_AUTO_RESTART_ENABLED=true `#optional` \
   -e 'MOD_AUTO_RESTART_CRON=0 6 * * *' `#optional` \
@@ -204,7 +204,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e PGID=1000` | for GroupID - see below for explanation. |
 | `-e UMASK=0002` | Set the umask for file creation. Optional, defaults to `0002` (files: 664, dirs: 775, group write access). |
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
-| `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. This is **not** the Web UI login password (see `WEBUI_PWD`). It will overwrite the password in the config files. |
+| `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. This is **not** the Web UI login password (see `WEBUI_PWD`). It will overwrite the password in the config files. Optional, only needed to connect with amulegui or amulecmd. |
 | `-e WEBUI_PWD=<fill_password>` | Set the Web UI admin password, the one you log in to the Web UI with. It will overwrite the password in the config files. |
 | `-e WEBUI_GUEST_PWD=<fill_password>` | Set the Web UI guest password, a read-only account. Optional, leave it empty to disable the guest account. If you remove the variable entirely, whatever was set before is kept. |
 | `-e WEBUI_BASE_PATH=/amule` | Serve the Web UI and REST API under a sub-path, for a reverse proxy that shares the hostname with other apps. Only letters, digits, `-`, `.`, `_`, `~` and `/` are allowed. Optional, not set by default (no path). |
@@ -299,7 +299,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-      - GUI_PWD=<fill_password>
+      - GUI_PWD=<fill_password> # optional, only for amulegui/amulecmd
       - WEBUI_PWD=<fill_password>
     volumes:
       - <fill_amule_configuration_path>:/home/amule/.aMule
