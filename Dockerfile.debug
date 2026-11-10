@@ -11,40 +11,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libboost-dev libcrypto++-dev libmaxminddb-dev libreadline-dev libcurl4-openssl-dev libpcre2-dev zlib1g-dev libpng-dev libupnp-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Build a minimal ffprobe from source (~3 MB). aMule uses it to extract length, bitrate and
-# codec from shared media files. The Debian ffmpeg package would add ~470 MB, so everything
-# is disabled except the demuxers, parsers and the file protocol that ffprobe needs to read
-# container metadata: no decoders, no encoders, no muxers, no filters, no network. ffprobe
-# needs only avcodec and avformat, so avdevice, avfilter, swscale and swresample are skipped
-ARG FFMPEG_REF=n9.0.1
-RUN git init -q ffmpeg-src && \
-    git -C ffmpeg-src fetch --depth 1 https://github.com/FFmpeg/FFmpeg.git ${FFMPEG_REF} && \
-    git -C ffmpeg-src checkout -q FETCH_HEAD && \
-    cd ffmpeg-src && \
-    ./configure \
-        --prefix=/usr \
-        --disable-autodetect \
-        --disable-everything \
-        --disable-doc \
-        --disable-debug \
-        --disable-network \
-        --disable-programs \
-        --disable-x86asm \
-        --disable-avdevice \
-        --disable-avfilter \
-        --disable-swscale \
-        --disable-swresample \
-        --enable-ffprobe \
-        --enable-demuxers \
-        --enable-parsers \
-        --enable-protocol=file \
-        --enable-zlib \
-        --enable-small && \
-    make -j"$(nproc)" && \
-    make install && \
-    strip /usr/bin/ffprobe && \
-    rm -rf /tmp/*
-
 # wxWidgets is built from source because of a bug in wx: amuled hits a use-after-free in
 # the wx event loop during the startup HTTP downloads
 # https://github.com/amule-org/amule/issues/1136
@@ -112,7 +78,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="ngosang@hotmail.es"
 
 # Copy binaries and Web UI
-COPY --from=builder /usr/bin/alcc /usr/bin/amuleapi /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/ffprobe /usr/bin/
+COPY --from=builder /usr/bin/alcc /usr/bin/amuleapi /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/bin/
+COPY --from=builder /usr/libexec/amule /usr/libexec/amule
 COPY --from=builder /usr/share/amule /usr/share/amule
 COPY --from=builder /usr/lib/libwx_baseu*.so.0.*.* /usr/lib/
 
@@ -125,8 +92,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* /usr/share/locale /usr/share/doc/* /usr/share/doc-base /usr/share/lintian && \
     ldconfig && \
     # Check binaries are OK (fail the build if any shared library is missing)
-    for bin in alcc amuleapi amulecmd amuled amuleweb ed2k ffprobe; do \
-        if ldd "/usr/bin/$bin" | grep -q "not found"; then echo "ERROR: missing shared libraries in $bin:"; ldd "/usr/bin/$bin"; exit 1; fi; \
+    for bin in /usr/bin/alcc /usr/bin/amuleapi /usr/bin/amulecmd /usr/bin/amuled /usr/bin/amuleweb /usr/bin/ed2k /usr/libexec/amule/amule-media-probe; do \
+        if ldd "$bin" | grep -q "not found"; then echo "ERROR: missing shared libraries in $bin:"; ldd "$bin"; exit 1; fi; \
     done
 
 # Use the built-in C.UTF-8 locale so amuled handles non-ASCII paths correctly

@@ -228,7 +228,6 @@ BindAddress=127.0.0.1
 HttpPort=4713
 [MediaMetadata]
 Enabled=1
-FFProbePath=
 [GUI]
 HideOnClose=0
 AppImageIntegrationDeclined=0

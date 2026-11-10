@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.0-1 (unreleased)
+
+* Update aMule to 3.3.0 stable release
+* Replace the bundled `ffprobe` with `amule-media-probe`, the new media metadata helper included in aMule 3.3.0
+* Remove the `FFProbePath` key from the default `amule.conf` template. Only affects new configurations
+
 ## 3.2.0-1 (2026/10/28)
 
 * **Security release:** aMule 3.2.0 fixes 15 vulnerabilities, all of them present in 3.1.0. Some upstream defaults changed for safety, read the "Upgrading to 3.2.0" section of the README and the upstream [release notes](https://amule-org.github.io/changelog/3.2.0)
