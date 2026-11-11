@@ -85,8 +85,7 @@ and [event stream docs](https://github.com/amule-org/amule/blob/master/docs/api/
 > [reverse proxy examples](https://github.com/amule-org/amule/blob/master/docs/QUICKSTART-AMULEAPI.md).
 
 The Web UI and API settings live in their own `amuleapi.conf` file in the configuration
-volume (bind address, port, CORS and `StaticRoot`); the `[WebServer]` section of
-`amule.conf` is only used by the legacy Web UI. Restart the container after editing it.
+volume (bind address, port, CORS and `StaticRoot`). Restart the container after editing it.
 To serve your own Web UI bundle instead of the one shipped in the image, mount it in the
 container and set `StaticRoot` to its path. Leave `StaticRoot=` empty to serve the bundled
 Web UI (`/usr/share/amule/amuleapi-static`).
@@ -204,7 +203,7 @@ Container images are configured using parameters passed at runtime (such as thos
 | `-e PGID=1000` | for GroupID - see below for explanation. |
 | `-e UMASK=0002` | Set the umask for file creation. Optional, defaults to `0002` (files: 664, dirs: 775, group write access). |
 | `-e TZ=Europe/London` | Specify a timezone to use EG Europe/London. |
-| `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. This is **not** the Web UI login password (see `WEBUI_PWD`). It will overwrite the password in the config files. Optional, only needed to connect with amulegui or amulecmd. |
+| `-e GUI_PWD=<fill_password>` | Set the External Connections password, used by amuleapi, amulegui and amulecmd. This is **not** the Web UI login password (see `WEBUI_PWD`). It will overwrite the password in the config files. Optional, only needed to connect with amulegui or amulecmd. Change the password only through this variable: a change made from amulegui does not reach the Web UI. |
 | `-e WEBUI_PWD=<fill_password>` | Set the Web UI admin password, the one you log in to the Web UI with. It will overwrite the password in the config files. |
 | `-e WEBUI_GUEST_PWD=<fill_password>` | Set the Web UI guest password, a read-only account. Optional, leave it empty to disable the guest account. If you remove the variable entirely, whatever was set before is kept. |
 | `-e WEBUI_BASE_PATH=/amule` | Serve the Web UI and REST API under a sub-path, for a reverse proxy that shares the hostname with other apps. Only letters, digits, `-`, `.`, `_`, `~` and `/` are allowed. Optional, not set by default (no path). |
@@ -233,6 +232,20 @@ In this instance `PUID=1000` and `PGID=1000`, to find yours use `id user` as bel
     uid=1000(dockeruser) gid=1000(dockergroup) groups=1000(dockergroup)
 ```
 
+## Upgrading to 3.3.0
+
+Read the upstream [release notes](https://amule-org.github.io/changelog/3.3.0). In this image:
+
+1. **amulegui and amulecmd must be 3.3.0 or later.** Older clients are refused.
+2. **Rolling back to 3.2.0 needs `ECPassword`.** aMule 3.3.0 replaces it in `amule.conf`
+   with `ECPasswordVerifier`, and 3.2.0 does not start without it (`GUI_PWD` does not add
+   it back). Before rolling back, add `ECPassword=<digest>` under `[ExternalConnect]`,
+   copying the digest from `Password` in the `[EC]` section of `remote.conf`.
+3. **The legacy Web UI reads `remote.conf`.** With `LEGACY_AMULEWEB_ENABLED=true`, move any
+   `[WebServer]` customization from `amule.conf` to `remote.conf`, where some keys are
+   renamed (`Password` → `AdminPassword`, `PasswordLow` → `GuestPassword`,
+   `UseLowRightsUser` → `AllowGuest`, `WebUPnPTCPPort` → `UPnPTCPPort`).
+
 ## Upgrading to 3.2.0
 
 aMule 3.2.0 is a security release and a drop-in upgrade, but some defaults changed for
@@ -243,7 +256,7 @@ The ones that matter in this image:
    `/downloads` and the incoming and temp directories. To add shares outside them from the
    Web UI, list their roots in that file, see [Application Setup](#application-setup).
 2. **`GUI_PWD` is no longer needed by amuleapi.** It now logs in to aMule with the same
-   password digest stored in `amule.conf`, so the plain text External Connections password
+   password digest as the other clients, so the plain text External Connections password
    is removed from `amuleapi.conf`, and upgrading from 3.0.x works without `GUI_PWD`.
 
 ## Upgrading from 3.0.x
@@ -270,8 +283,7 @@ up your configuration volume first.
 4. **Web UI settings moved to `amuleapi.conf`.** The `[WebServer]` section of `amule.conf`
    (`Port`, `Template`, `UseGzip`, `PageRefreshTime`, ...) is ignored by amuleapi, so any
    customization there has to be redone in `amuleapi.conf`, which only has the equivalents
-   for the bind address, the port and the static files. Nothing is lost, the section stays
-   in `amule.conf` and is used again in legacy mode.
+   for the bind address, the port and the static files.
 5. **UPnP no longer forwards the Web UI port.** Only relevant if you run with
    `network_mode: host` and had `UPnPWebServerEnabled=1`: amuleapi has no UPnP support, so
    port `4711` has to be forwarded by hand from now on. See the [UPnP](#upnp) section.
@@ -358,10 +370,11 @@ These options control how aMule scans the shared directories. Change them from t
 
 Set `LEGACY_AMULEWEB_ENABLED=true` and the container starts `amuleweb` instead of
 `amuleapi`, on the same port `4711`. The amuleapi files in the configuration volume are
-left untouched, so removing the variable switches back to the new Web UI.
+kept, so removing the variable switches back to the new Web UI.
 
-In this mode the Web UI password is the `WEBUI_PWD` one stored in `amule.conf`, and there
-is no REST API and no read-only guest account (`WEBUI_GUEST_PWD` is ignored).
+In this mode the settings are read from the `[WebServer]` section of `remote.conf`, the Web
+UI password is the `WEBUI_PWD` one stored there, and there is no REST API and no read-only
+guest account (`WEBUI_GUEST_PWD` is ignored).
 
 <details>
 <summary>Screenshot of the legacy Web UI</summary>
@@ -378,7 +391,7 @@ removed because it is not compatible with aMule 3.0.0.
 
 You can still use a custom theme by mounting it as an external volume inside the web
 server templates directory (`/usr/share/amule/webserver/<ThemeName>`) and pointing the
-`Template` option to it in the `amule.conf` file:
+`Template` option to it in the `remote.conf` file:
 
 ```yaml
 services:
@@ -388,6 +401,6 @@ services:
       - /path/to/my-theme:/usr/share/amule/webserver/MyTheme
 ```
 
-Then edit the `amule.conf` file (with the container stopped) and set `Template=MyTheme`.
+Then edit the `remote.conf` file, set `Template=MyTheme` and restart the container.
 Leave `Template=` empty to use the default theme. The theme directory must contain
 `login.php` at its root, otherwise aMule silently falls back to the default theme.

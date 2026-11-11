@@ -2,9 +2,12 @@
 
 ## 3.3.0-1 (unreleased)
 
+* **Breaking change:** amulegui and amulecmd must be 3.3.0 or later, read "Upgrading to 3.3.0" in the README
 * Update aMule to 3.3.0 stable release
 * Replace the bundled `ffprobe` with `amule-media-probe`, the new media metadata helper included in aMule 3.3.0
-* Remove the `FFProbePath` key from the default `amule.conf` template. Only affects new configurations
+* Remove the `FFProbePath` key from the default `amule.conf` template, and `Encryption` from `amuleapi.conf`. Only affects new configurations
+* Keep `GUI_PWD` and the Web UI working with the `ECPasswordVerifier` of aMule 3.3.0. Rolling back to 3.2.0 needs a manual step, read "Upgrading to 3.3.0" in the README
+* Start the legacy Web UI (amuleweb) with `remote.conf`, since aMule 3.3.0 no longer lets it log in with `amule.conf`. Its settings are now read from there
 
 ## 3.2.0-1 (2026/10/28)
 

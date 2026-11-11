@@ -17,6 +17,6 @@ mod_auto_share
 
 # Hand off to S6 process supervisor
 # Export dynamic variables so S6 services inherit them
-export AMULE_USER AMULE_UID AMULE_GID AMULE_HOME AMULE_CONF
+export AMULE_USER AMULE_UID AMULE_GID AMULE_HOME
 printf "[INIT] Starting supervisor ...\n"
 exec /usr/bin/s6-svscan /etc/services.d

@@ -212,7 +212,6 @@ AuthFailureWindowSeconds=60
 AuthLockoutSeconds=300
 [WebServer]
 Enabled=0
-Password=${AMULE_WEBUI_ENCODED_PWD}
 PasswordLow=
 Port=4711
 WebUPnPTCPPort=50001
@@ -273,9 +272,25 @@ else
     printf "[INIT] File %s found. Using existing configuration.\n" "${AMULE_CONF}"
 fi
 
+# amuled replaces ECPassword with ECPasswordVerifier on start, so it is written back whenever
+# GUI_PWD is set: a different digest replaces the verifier, a matching one is removed again
+if [ -n "${GUI_PWD}" ]; then
+    sed -i -e '/^ECPassword=/d' \
+        -e "/^\[ExternalConnect\]/a ECPassword=${AMULE_GUI_ENCODED_PWD}" "${AMULE_CONF}"
+fi
+
+# MD5 digest of the External Connections password, from the first file that has it. amuled
+# removes ECPassword on start, so remote.conf and amuleapi.conf keep it. amuleweb and amuleapi
+# log in with it and never need GUI_PWD
+AMULE_EC_HASH=$(sed -sn -e 's/^ECPassword=//p' -e 's/^PasswordMD5=//p' -e '/^\[EC\]/,/^\[/s/^Password=//p' \
+    "${AMULE_CONF}" "${AMULEAPI_CONF}" "${REMOTE_CONF}" 2>/dev/null | grep -x '[0-9a-fA-F]\{32\}' | head -n 1)
+[ -n "${AMULE_EC_HASH}" ] || printf "[INIT] WARNING: External Connections password not found. Set GUI_PWD to fix it.\n"
+
 if [ ! -f ${REMOTE_CONF} ]; then
-    printf "[INIT] Remote GUI password: %s\n" "${AMULE_GUI_PWD}"
-    printf "[INIT] Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
+    # The new random password is only used by the legacy Web UI
+    if [ "${LEGACY_AMULEWEB_ENABLED}" = "true" ] && [ -z "${WEBUI_PWD}" ] && [ "${AMULE_CONF_CREATED}" != "true" ]; then
+        printf "[INIT] Web UI password: %s\n" "${AMULE_WEBUI_PWD}"
+    fi
 
     printf "[INIT] File %s NOT found. Generating new default configuration ...\n" "${REMOTE_CONF}"
     cat > ${REMOTE_CONF} <<- EOM
@@ -283,7 +298,7 @@ Locale=
 [EC]
 Host=127.0.0.1
 Port=4712
-Password=${AMULE_GUI_ENCODED_PWD}
+Password=${AMULE_EC_HASH}
 ZLIB=1
 ForceZLIB=0
 [WebServer]
@@ -328,13 +343,8 @@ if [ ! -d /usr/share/amule/webserver/AmuleWebUI-Reloaded ]; then
     sed -i 's/^Template=AmuleWebUI-Reloaded$/Template=/' "${AMULE_CONF}" "${REMOTE_CONF}"
 fi
 
-# Replace passwords
-if [ -n "${GUI_PWD}" ]; then
-    sed -i "s/^ECPassword=.*/ECPassword=${AMULE_GUI_ENCODED_PWD}/" "${AMULE_CONF}"
-    sed -i "s/^Password=.*/Password=${AMULE_GUI_ENCODED_PWD}/" "${REMOTE_CONF}"
-fi
+# Legacy Web UI password
 if [ -n "${WEBUI_PWD}" ]; then
-    sed -i "s/^Password=.*/Password=${AMULE_WEBUI_ENCODED_PWD}/" "${AMULE_CONF}"
     sed -i "s/^AdminPassword=.*/AdminPassword=${AMULE_WEBUI_ENCODED_PWD}/" "${REMOTE_CONF}"
 fi
 
@@ -346,11 +356,9 @@ fix_permissions() {
     printf "[INIT] WARNING: could not change the ownership of %s. This is expected on NFS or CIFS/SMB mounts: set PUID/PGID to match the share, or set FIX_PERMISSIONS=false to skip this step for the download directories.\n" "$1"
 }
 
-# amuleapi logs in to amuled with the same MD5 digest amule.conf stores, so it is copied
-# from there on every start and never needs the plaintext GUI_PWD. Done in every mode, so
-# the plaintext Password written by the 3.1.0 image is always removed (amuleapi refuses to
-# start with both)
-AMULE_EC_HASH=$(grep -m1 -o '^ECPassword=[0-9a-fA-F]\{32\}' "${AMULE_CONF}" | cut -d= -f2)
+# Sync the digest to remote.conf and amuleapi.conf. A plaintext [EC] Password in
+# amuleapi.conf is removed (amuleapi refuses to start with both)
+sed -i "/^\[EC\]/,/^\[/{s/^Password=.*/Password=${AMULE_EC_HASH}/}" "${REMOTE_CONF}"
 if [ -f "${AMULEAPI_CONF}" ]; then
     grep -q '^\[EC\]' "${AMULEAPI_CONF}" || printf '[EC]\n' >> "${AMULEAPI_CONF}"
     sed -i -e '/^\[EC\]/,/^\[/{/^Password=/d;/^PasswordMD5=/d}' \
@@ -358,7 +366,7 @@ if [ -f "${AMULEAPI_CONF}" ]; then
 fi
 
 # Configure amuleapi (new Web UI + REST API), unless the Web UI is disabled or the legacy
-# amuleweb was requested (amuleweb reads amule.conf/remote.conf, generated above)
+# amuleweb was requested (amuleweb reads remote.conf, generated above)
 if [ "${WEBUI_ENABLED:-true}" = "true" ] && [ "${LEGACY_AMULEWEB_ENABLED}" != "true" ]; then
     if [ ! -f "${AMULEAPI_CONF}" ]; then
         printf "[INIT] File %s NOT found. Generating new default configuration ...\n" "${AMULEAPI_CONF}"
@@ -372,7 +380,6 @@ StaticRoot=
 Host=127.0.0.1
 Port=4712
 PasswordMD5=${AMULE_EC_HASH}
-Encryption=1
 [Auth]
 LoginFailureWindowSeconds=60
 LoginFailureThreshold=5
